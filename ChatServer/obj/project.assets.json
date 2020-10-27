@@ -271,23 +271,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\jog\\.nuget\\packages\\": {},
-    "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
+    "C:\\Users\\Rafael\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\jog\\source\\repos\\DADChat\\ChatServer\\ChatServer.csproj",
+      "projectUniqueName": "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatServer\\ChatServer.csproj",
       "projectName": "ChatServer",
-      "projectPath": "C:\\Users\\jog\\source\\repos\\DADChat\\ChatServer\\ChatServer.csproj",
-      "packagesPath": "C:\\Users\\jog\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\jog\\source\\repos\\DADChat\\ChatServer\\obj\\",
+      "projectPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatServer\\ChatServer.csproj",
+      "packagesPath": "C:\\Users\\Rafael\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatServer\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
-      ],
       "configFilePaths": [
-        "C:\\Users\\jog\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Rafael\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [

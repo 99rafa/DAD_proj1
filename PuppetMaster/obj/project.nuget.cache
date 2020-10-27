@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "5Ro7cNfHxqv75AHapRjK7tuJ9qisvyKLxyfi6ai9TG7jqNVmWP7iv8aeWeG9Fra42VHx129D9JiYzPyx87UzZA==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\PuppetMaster\\PuppetMaster.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Rafael\\.nuget\\packages\\google.protobuf\\3.13.0\\google.protobuf.3.13.0.nupkg.sha512",
+    "C:\\Users\\Rafael\\.nuget\\packages\\grpc.core\\2.33.1\\grpc.core.2.33.1.nupkg.sha512",
+    "C:\\Users\\Rafael\\.nuget\\packages\\grpc.core.api\\2.33.1\\grpc.core.api.2.33.1.nupkg.sha512",
+    "C:\\Users\\Rafael\\.nuget\\packages\\grpc.tools\\2.33.1\\grpc.tools.2.33.1.nupkg.sha512",
+    "C:\\Users\\Rafael\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512",
+    "C:\\Users\\Rafael\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\4.5.2\\system.runtime.compilerservices.unsafe.4.5.2.nupkg.sha512"
+  ],
+  "logs": []
+}

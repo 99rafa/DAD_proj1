@@ -1,23 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\jog\\source\\repos\\DADChat\\ChatClient\\ChatClient.csproj": {}
+    "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatClient\\ChatClient.csproj": {}
   },
   "projects": {
-    "C:\\Users\\jog\\source\\repos\\DADChat\\ChatClient\\ChatClient.csproj": {
+    "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatClient\\ChatClient.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\jog\\source\\repos\\DADChat\\ChatClient\\ChatClient.csproj",
+        "projectUniqueName": "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatClient\\ChatClient.csproj",
         "projectName": "ChatClient",
-        "projectPath": "C:\\Users\\jog\\source\\repos\\DADChat\\ChatClient\\ChatClient.csproj",
-        "packagesPath": "C:\\Users\\jog\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\jog\\source\\repos\\DADChat\\ChatClient\\obj\\",
+        "projectPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatClient\\ChatClient.csproj",
+        "packagesPath": "C:\\Users\\Rafael\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatClient\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
-        ],
         "configFilePaths": [
-          "C:\\Users\\jog\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Rafael\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
