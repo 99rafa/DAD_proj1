@@ -1,0 +1,2 @@
+obj\Debug\netcoreapp3.1\protos/DADChatServer.cs \
+obj\Debug\netcoreapp3.1\protos/DADChatServerGrpc.cs: protos/DADChatServer.proto

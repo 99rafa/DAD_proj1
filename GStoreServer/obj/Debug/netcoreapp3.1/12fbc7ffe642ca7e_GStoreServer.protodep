@@ -1,0 +1,2 @@
+obj\Debug\netcoreapp3.1\protos/GStoreServer.cs \
+obj\Debug\netcoreapp3.1\protos/GStoreServerGrpc.cs: protos/GStoreServer.proto

@@ -1,0 +1,40 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "PuppetMaster";
+
+service PuppetMasterService {
+ 
+}
+message ReplicationFactorRequest {
+  int32 r = 1;
+}
+message ReplicationFactorReply {
+	string value = 1;
+}
+
+message WriteValueRequest {
+	int32 partition_id = 1;
+	int32 object_id = 2;
+	string value = 3;
+}
+
+message WriteValueReply {
+	bool ok = 1;
+}
+
+message ListServerObjectsRequest {
+	int32 server_id = 1;
+}
+
+message ListServerObjectsReply {
+	repeated string objects = 1;
+}
+
+message ListGlobalRequest {
+
+}
+
+message ListGlobalReply {
+	repeated int32 partition_ids = 1;
+	repeated int32 object_id = 2;
+}
