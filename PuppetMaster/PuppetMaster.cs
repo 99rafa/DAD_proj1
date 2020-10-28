@@ -18,6 +18,7 @@ namespace PuppetMaster {
 
         List<String> commandQueue= new List<String>();
         Dictionary<String, String> servers = new Dictionary<String, String>();
+        Dictionary<String, String> clients = new Dictionary<String, String>();
 
         public PuppetMaster() {
             // setup the puppet master service
@@ -71,6 +72,15 @@ namespace PuppetMaster {
                 case "Partition":
                     break;
                 case "Client":
+                    String username = args[1];
+                    String client_url = args[2];
+                    String script_file = args[3];
+                    Process client_process = new Process();
+                    if (!clients.ContainsKey(username))
+                        clients.Add(username, client_url);
+                    client_process.StartInfo.FileName = "..\\..\\..\\..\\GStoreClient\\bin\\Debug\\netcoreapp3.1\\GStoreClient.exe";
+                    client_process.StartInfo.Arguments = username + " " + client_url + " " + script_file ;
+                    process.Start();
                     break;
                 case "Status":
                     break;
