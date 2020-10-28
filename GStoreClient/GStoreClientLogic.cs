@@ -18,15 +18,13 @@ namespace GStoreClient {
         private readonly GrpcChannel channel;
         private readonly GStoreServerService.GStoreServerServiceClient client;
         private Server server;
-        private readonly Form1 guiWindow;
         private string nick;
         private string hostname;
         private AsyncUnaryCall<BcastMsgReply> lastMsgCall;
 
-        public GStoreClient(Form1 guiWindow, bool sec, string serverHostname, int serverPort, 
+        public GStoreClient(bool sec, string serverHostname, int serverPort, 
                              string clientHostname) {
             this.hostname = clientHostname;
-            this.guiWindow = guiWindow;
             // setup the client side
 
                 AppContext.SetSwitch(
@@ -37,7 +35,6 @@ namespace GStoreClient {
         }
 
         public bool AddMsgtoGUI(string s) {
-            this.guiWindow.BeginInvoke(new DelAddMsg(guiWindow.AddMsgtoGUI), new object[] { s });
             return true;
         }
 
