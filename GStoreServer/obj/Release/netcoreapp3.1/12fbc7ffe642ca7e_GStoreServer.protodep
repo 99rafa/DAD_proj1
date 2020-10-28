@@ -1,2 +1,0 @@
-obj\Release\netcoreapp3.1\protos/GStoreServer.cs \
-obj\Release\netcoreapp3.1\protos/GStoreServerGrpc.cs: protos/GStoreServer.proto
