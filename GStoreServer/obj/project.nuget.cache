@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "LI99TAzOUEJjjNl7wGALKtjemioiG3srxrG8dFK07Xj2qU1gDTR+lPjyttmC7m0vRNJeBONWjoZNZ2eJTnO2qw==",
+  "dgSpecHash": "VMBgB9gEj6S5NV3hi7AWQG61Bk+FZZGsTDqNRLYiwiFONeoD5GUm2lz8VjJAMYzKQuV3fFn847jnpQRoXdcGHg==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatServer\\GStoreServer.csproj",
+  "projectFilePath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreServer\\GStoreServer.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Rafael\\.nuget\\packages\\google.protobuf\\3.13.0\\google.protobuf.3.13.0.nupkg.sha512",
     "C:\\Users\\Rafael\\.nuget\\packages\\grpc.core\\2.32.0\\grpc.core.2.32.0.nupkg.sha512",

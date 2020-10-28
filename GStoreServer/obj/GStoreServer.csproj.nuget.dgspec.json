@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatServer\\GStoreServer.csproj": {}
+    "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreServer\\GStoreServer.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatServer\\GStoreServer.csproj": {
+    "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreServer\\GStoreServer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatServer\\GStoreServer.csproj",
+        "projectUniqueName": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreServer\\GStoreServer.csproj",
         "projectName": "GStoreServer",
-        "projectPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatServer\\GStoreServer.csproj",
+        "projectPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreServer\\GStoreServer.csproj",
         "packagesPath": "C:\\Users\\Rafael\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\ChatServer\\obj\\",
+        "outputPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreServer\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Rafael\\AppData\\Roaming\\NuGet\\NuGet.Config",

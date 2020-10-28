@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Rafael\\Documents\\DAD\\project\\GUIChatClient\\GStoreClient.csproj": {}
+    "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreClient\\GStoreClient.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Rafael\\Documents\\DAD\\project\\GUIChatClient\\GStoreClient.csproj": {
+    "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreClient\\GStoreClient.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GUIChatClient\\GStoreClient.csproj",
+        "projectUniqueName": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreClient\\GStoreClient.csproj",
         "projectName": "GStoreClient",
-        "projectPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GUIChatClient\\GStoreClient.csproj",
+        "projectPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreClient\\GStoreClient.csproj",
         "packagesPath": "C:\\Users\\Rafael\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GUIChatClient\\obj\\",
+        "outputPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreClient\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Rafael\\AppData\\Roaming\\NuGet\\NuGet.Config",

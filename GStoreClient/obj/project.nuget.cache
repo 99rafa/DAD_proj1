@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "WCL6dDqUWx3TB/vSPDu7Ko4Y6icnhdCWZyi4UbJInNezrC5B7m1dHZh1bBsJ7yGqxYWqz5jrWJNHA9NDrr+6/A==",
+  "dgSpecHash": "zsgl1TxzTXPodorqqErJYYwqbtSsNENpKz1DrbmWGxP5OkAPg/sS8CGzhwhJDp8G0XlBCD3OsjYynAQu6cw6LA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GUIChatClient\\GStoreClient.csproj",
+  "projectFilePath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreClient\\GStoreClient.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Rafael\\.nuget\\packages\\google.protobuf\\3.13.0\\google.protobuf.3.13.0.nupkg.sha512",
     "C:\\Users\\Rafael\\.nuget\\packages\\grpc.core\\2.32.0\\grpc.core.2.32.0.nupkg.sha512",

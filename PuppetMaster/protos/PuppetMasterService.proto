@@ -3,38 +3,55 @@
 option csharp_namespace = "PuppetMaster";
 
 service PuppetMasterService {
- 
+	rpc ReplicationFactor (ReplicationFactorRequest) returns (ReplicationFactorReply);
+	rpc Partition (PartitionRequest)  returns (PartitionReply);
+	rpc Status (StatusRequest) returns (StatusReply);
+	rpc Crash (CrashRequest) returns (CrashReply);
+	rpc Freeze (FreezeRequest) returns (FreezeReply);
+	rpc Unfreeze (UnfreezeRequest) returns (UnfreezeReply);
 }
 message ReplicationFactorRequest {
   int32 r = 1;
 }
 message ReplicationFactorReply {
-	string value = 1;
 }
 
-message WriteValueRequest {
-	int32 partition_id = 1;
-	int32 object_id = 2;
-	string value = 3;
+message PartitionRequest {
+	string partition_name = 1;
 }
 
-message WriteValueReply {
+message PartitionReply {
 	bool ok = 1;
 }
 
-message ListServerObjectsRequest {
-	int32 server_id = 1;
+message StatusRequest {
+		
 }
 
-message ListServerObjectsReply {
-	repeated string objects = 1;
+message StatusReply {
+	bool ok = 1;
 }
 
-message ListGlobalRequest {
+message CrashRequest {
 
 }
 
-message ListGlobalReply {
-	repeated int32 partition_ids = 1;
-	repeated int32 object_id = 2;
+message CrashReply {
+	bool ok = 1;
+}
+
+message FreezeRequest {
+	
+}
+
+´message FreezeReply {
+	bool ok = 1;
+}
+
+message UnfreezeRequest {
+	bool ok=1;
+}
+
+message UnfreezeReply {
+
 }

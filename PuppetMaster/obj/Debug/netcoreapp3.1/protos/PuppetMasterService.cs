@@ -25,26 +25,20 @@ namespace PuppetMaster {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "CiBwcm90b3MvUHVwcGV0TWFzdGVyU2VydmljZS5wcm90byIlChhSZXBsaWNh",
-            "dGlvbkZhY3RvclJlcXVlc3QSCQoBchgBIAEoBSInChZSZXBsaWNhdGlvbkZh",
-            "Y3RvclJlcGx5Eg0KBXZhbHVlGAEgASgJIksKEVdyaXRlVmFsdWVSZXF1ZXN0",
-            "EhQKDHBhcnRpdGlvbl9pZBgBIAEoBRIRCglvYmplY3RfaWQYAiABKAUSDQoF",
-            "dmFsdWUYAyABKAkiHQoPV3JpdGVWYWx1ZVJlcGx5EgoKAm9rGAEgASgIIi0K",
-            "GExpc3RTZXJ2ZXJPYmplY3RzUmVxdWVzdBIRCglzZXJ2ZXJfaWQYASABKAUi",
-            "KQoWTGlzdFNlcnZlck9iamVjdHNSZXBseRIPCgdvYmplY3RzGAEgAygJIhMK",
-            "EUxpc3RHbG9iYWxSZXF1ZXN0IjsKD0xpc3RHbG9iYWxSZXBseRIVCg1wYXJ0",
-            "aXRpb25faWRzGAEgAygFEhEKCW9iamVjdF9pZBgCIAMoBTIVChNQdXBwZXRN",
-            "YXN0ZXJTZXJ2aWNlQg+qAgxQdXBwZXRNYXN0ZXJiBnByb3RvMw=="));
+            "dGlvbkZhY3RvclJlcXVlc3QSCQoBchgBIAEoBSIYChZSZXBsaWNhdGlvbkZh",
+            "Y3RvclJlcGx5IioKEFBhcnRpdGlvblJlcXVlc3QSFgoOcGFydGl0aW9uX25h",
+            "bWUYASABKAkiHAoOUGFydGl0aW9uUmVwbHkSCgoCb2sYASABKAgiDwoNU3Rh",
+            "dHVzUmVxdWVzdCIZCgtTdGF0dXNSZXBseRIKCgJvaxgBIAEoCDIVChNQdXBw",
+            "ZXRNYXN0ZXJTZXJ2aWNlQg+qAgxQdXBwZXRNYXN0ZXJiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.ReplicationFactorRequest), global::PuppetMaster.ReplicationFactorRequest.Parser, new[]{ "R" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.ReplicationFactorReply), global::PuppetMaster.ReplicationFactorReply.Parser, new[]{ "Value" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.WriteValueRequest), global::PuppetMaster.WriteValueRequest.Parser, new[]{ "PartitionId", "ObjectId", "Value" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.WriteValueReply), global::PuppetMaster.WriteValueReply.Parser, new[]{ "Ok" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.ListServerObjectsRequest), global::PuppetMaster.ListServerObjectsRequest.Parser, new[]{ "ServerId" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.ListServerObjectsReply), global::PuppetMaster.ListServerObjectsReply.Parser, new[]{ "Objects" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.ListGlobalRequest), global::PuppetMaster.ListGlobalRequest.Parser, null, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.ListGlobalReply), global::PuppetMaster.ListGlobalReply.Parser, new[]{ "PartitionIds", "ObjectId" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.ReplicationFactorReply), global::PuppetMaster.ReplicationFactorReply.Parser, null, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.PartitionRequest), global::PuppetMaster.PartitionRequest.Parser, new[]{ "PartitionName" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.PartitionReply), global::PuppetMaster.PartitionReply.Parser, new[]{ "Ok" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.StatusRequest), global::PuppetMaster.StatusRequest.Parser, null, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::PuppetMaster.StatusReply), global::PuppetMaster.StatusReply.Parser, new[]{ "Ok" }, null, null, null, null)
           }));
     }
     #endregion
@@ -252,24 +246,12 @@ namespace PuppetMaster {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public ReplicationFactorReply(ReplicationFactorReply other) : this() {
-      value_ = other.value_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public ReplicationFactorReply Clone() {
       return new ReplicationFactorReply(this);
-    }
-
-    /// <summary>Field number for the "value" field.</summary>
-    public const int ValueFieldNumber = 1;
-    private string value_ = "";
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string Value {
-      get { return value_; }
-      set {
-        value_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -285,14 +267,12 @@ namespace PuppetMaster {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (Value != other.Value) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      if (Value.Length != 0) hash ^= Value.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -309,10 +289,6 @@ namespace PuppetMaster {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (Value.Length != 0) {
-        output.WriteRawTag(10);
-        output.WriteString(Value);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -322,10 +298,6 @@ namespace PuppetMaster {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (Value.Length != 0) {
-        output.WriteRawTag(10);
-        output.WriteString(Value);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -335,9 +307,6 @@ namespace PuppetMaster {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      if (Value.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(Value);
-      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -348,9 +317,6 @@ namespace PuppetMaster {
     public void MergeFrom(ReplicationFactorReply other) {
       if (other == null) {
         return;
-      }
-      if (other.Value.Length != 0) {
-        Value = other.Value;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -366,10 +332,6 @@ namespace PuppetMaster {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 10: {
-            Value = input.ReadString();
-            break;
-          }
         }
       }
     #endif
@@ -384,10 +346,6 @@ namespace PuppetMaster {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
-          case 10: {
-            Value = input.ReadString();
-            break;
-          }
         }
       }
     }
@@ -395,15 +353,15 @@ namespace PuppetMaster {
 
   }
 
-  public sealed partial class WriteValueRequest : pb::IMessage<WriteValueRequest>
+  public sealed partial class PartitionRequest : pb::IMessage<PartitionRequest>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
   #endif
   {
-    private static readonly pb::MessageParser<WriteValueRequest> _parser = new pb::MessageParser<WriteValueRequest>(() => new WriteValueRequest());
+    private static readonly pb::MessageParser<PartitionRequest> _parser = new pb::MessageParser<PartitionRequest>(() => new PartitionRequest());
     private pb::UnknownFieldSet _unknownFields;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pb::MessageParser<WriteValueRequest> Parser { get { return _parser; } }
+    public static pb::MessageParser<PartitionRequest> Parser { get { return _parser; } }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
@@ -416,83 +374,55 @@ namespace PuppetMaster {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public WriteValueRequest() {
+    public PartitionRequest() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public WriteValueRequest(WriteValueRequest other) : this() {
-      partitionId_ = other.partitionId_;
-      objectId_ = other.objectId_;
-      value_ = other.value_;
+    public PartitionRequest(PartitionRequest other) : this() {
+      partitionName_ = other.partitionName_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public WriteValueRequest Clone() {
-      return new WriteValueRequest(this);
+    public PartitionRequest Clone() {
+      return new PartitionRequest(this);
     }
 
-    /// <summary>Field number for the "partition_id" field.</summary>
-    public const int PartitionIdFieldNumber = 1;
-    private int partitionId_;
+    /// <summary>Field number for the "partition_name" field.</summary>
+    public const int PartitionNameFieldNumber = 1;
+    private string partitionName_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public int PartitionId {
-      get { return partitionId_; }
+    public string PartitionName {
+      get { return partitionName_; }
       set {
-        partitionId_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "object_id" field.</summary>
-    public const int ObjectIdFieldNumber = 2;
-    private int objectId_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public int ObjectId {
-      get { return objectId_; }
-      set {
-        objectId_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "value" field.</summary>
-    public const int ValueFieldNumber = 3;
-    private string value_ = "";
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string Value {
-      get { return value_; }
-      set {
-        value_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        partitionName_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
-      return Equals(other as WriteValueRequest);
+      return Equals(other as PartitionRequest);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public bool Equals(WriteValueRequest other) {
+    public bool Equals(PartitionRequest other) {
       if (ReferenceEquals(other, null)) {
         return false;
       }
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (PartitionId != other.PartitionId) return false;
-      if (ObjectId != other.ObjectId) return false;
-      if (Value != other.Value) return false;
+      if (PartitionName != other.PartitionName) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      if (PartitionId != 0) hash ^= PartitionId.GetHashCode();
-      if (ObjectId != 0) hash ^= ObjectId.GetHashCode();
-      if (Value.Length != 0) hash ^= Value.GetHashCode();
+      if (PartitionName.Length != 0) hash ^= PartitionName.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -509,17 +439,9 @@ namespace PuppetMaster {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (PartitionId != 0) {
-        output.WriteRawTag(8);
-        output.WriteInt32(PartitionId);
-      }
-      if (ObjectId != 0) {
-        output.WriteRawTag(16);
-        output.WriteInt32(ObjectId);
-      }
-      if (Value.Length != 0) {
-        output.WriteRawTag(26);
-        output.WriteString(Value);
+      if (PartitionName.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(PartitionName);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -530,17 +452,9 @@ namespace PuppetMaster {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (PartitionId != 0) {
-        output.WriteRawTag(8);
-        output.WriteInt32(PartitionId);
-      }
-      if (ObjectId != 0) {
-        output.WriteRawTag(16);
-        output.WriteInt32(ObjectId);
-      }
-      if (Value.Length != 0) {
-        output.WriteRawTag(26);
-        output.WriteString(Value);
+      if (PartitionName.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(PartitionName);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
@@ -551,14 +465,8 @@ namespace PuppetMaster {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      if (PartitionId != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(PartitionId);
-      }
-      if (ObjectId != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(ObjectId);
-      }
-      if (Value.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(Value);
+      if (PartitionName.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(PartitionName);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -567,18 +475,12 @@ namespace PuppetMaster {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(WriteValueRequest other) {
+    public void MergeFrom(PartitionRequest other) {
       if (other == null) {
         return;
       }
-      if (other.PartitionId != 0) {
-        PartitionId = other.PartitionId;
-      }
-      if (other.ObjectId != 0) {
-        ObjectId = other.ObjectId;
-      }
-      if (other.Value.Length != 0) {
-        Value = other.Value;
+      if (other.PartitionName.Length != 0) {
+        PartitionName = other.PartitionName;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -594,16 +496,8 @@ namespace PuppetMaster {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 8: {
-            PartitionId = input.ReadInt32();
-            break;
-          }
-          case 16: {
-            ObjectId = input.ReadInt32();
-            break;
-          }
-          case 26: {
-            Value = input.ReadString();
+          case 10: {
+            PartitionName = input.ReadString();
             break;
           }
         }
@@ -620,16 +514,8 @@ namespace PuppetMaster {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
-          case 8: {
-            PartitionId = input.ReadInt32();
-            break;
-          }
-          case 16: {
-            ObjectId = input.ReadInt32();
-            break;
-          }
-          case 26: {
-            Value = input.ReadString();
+          case 10: {
+            PartitionName = input.ReadString();
             break;
           }
         }
@@ -639,15 +525,15 @@ namespace PuppetMaster {
 
   }
 
-  public sealed partial class WriteValueReply : pb::IMessage<WriteValueReply>
+  public sealed partial class PartitionReply : pb::IMessage<PartitionReply>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
   #endif
   {
-    private static readonly pb::MessageParser<WriteValueReply> _parser = new pb::MessageParser<WriteValueReply>(() => new WriteValueReply());
+    private static readonly pb::MessageParser<PartitionReply> _parser = new pb::MessageParser<PartitionReply>(() => new PartitionReply());
     private pb::UnknownFieldSet _unknownFields;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pb::MessageParser<WriteValueReply> Parser { get { return _parser; } }
+    public static pb::MessageParser<PartitionReply> Parser { get { return _parser; } }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
@@ -660,21 +546,21 @@ namespace PuppetMaster {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public WriteValueReply() {
+    public PartitionReply() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public WriteValueReply(WriteValueReply other) : this() {
+    public PartitionReply(PartitionReply other) : this() {
       ok_ = other.ok_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public WriteValueReply Clone() {
-      return new WriteValueReply(this);
+    public PartitionReply Clone() {
+      return new PartitionReply(this);
     }
 
     /// <summary>Field number for the "ok" field.</summary>
@@ -690,11 +576,11 @@ namespace PuppetMaster {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
-      return Equals(other as WriteValueReply);
+      return Equals(other as PartitionReply);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public bool Equals(WriteValueReply other) {
+    public bool Equals(PartitionReply other) {
       if (ReferenceEquals(other, null)) {
         return false;
       }
@@ -761,7 +647,7 @@ namespace PuppetMaster {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(WriteValueReply other) {
+    public void MergeFrom(PartitionReply other) {
       if (other == null) {
         return;
       }
@@ -811,15 +697,15 @@ namespace PuppetMaster {
 
   }
 
-  public sealed partial class ListServerObjectsRequest : pb::IMessage<ListServerObjectsRequest>
+  public sealed partial class StatusRequest : pb::IMessage<StatusRequest>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
   #endif
   {
-    private static readonly pb::MessageParser<ListServerObjectsRequest> _parser = new pb::MessageParser<ListServerObjectsRequest>(() => new ListServerObjectsRequest());
+    private static readonly pb::MessageParser<StatusRequest> _parser = new pb::MessageParser<StatusRequest>(() => new StatusRequest());
     private pb::UnknownFieldSet _unknownFields;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pb::MessageParser<ListServerObjectsRequest> Parser { get { return _parser; } }
+    public static pb::MessageParser<StatusRequest> Parser { get { return _parser; } }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
@@ -832,55 +718,41 @@ namespace PuppetMaster {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListServerObjectsRequest() {
+    public StatusRequest() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListServerObjectsRequest(ListServerObjectsRequest other) : this() {
-      serverId_ = other.serverId_;
+    public StatusRequest(StatusRequest other) : this() {
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListServerObjectsRequest Clone() {
-      return new ListServerObjectsRequest(this);
-    }
-
-    /// <summary>Field number for the "server_id" field.</summary>
-    public const int ServerIdFieldNumber = 1;
-    private int serverId_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public int ServerId {
-      get { return serverId_; }
-      set {
-        serverId_ = value;
-      }
+    public StatusRequest Clone() {
+      return new StatusRequest(this);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
-      return Equals(other as ListServerObjectsRequest);
+      return Equals(other as StatusRequest);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public bool Equals(ListServerObjectsRequest other) {
+    public bool Equals(StatusRequest other) {
       if (ReferenceEquals(other, null)) {
         return false;
       }
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (ServerId != other.ServerId) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      if (ServerId != 0) hash ^= ServerId.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -897,10 +769,6 @@ namespace PuppetMaster {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (ServerId != 0) {
-        output.WriteRawTag(8);
-        output.WriteInt32(ServerId);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -910,10 +778,6 @@ namespace PuppetMaster {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (ServerId != 0) {
-        output.WriteRawTag(8);
-        output.WriteInt32(ServerId);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -923,9 +787,6 @@ namespace PuppetMaster {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      if (ServerId != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(ServerId);
-      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -933,12 +794,9 @@ namespace PuppetMaster {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(ListServerObjectsRequest other) {
+    public void MergeFrom(StatusRequest other) {
       if (other == null) {
         return;
-      }
-      if (other.ServerId != 0) {
-        ServerId = other.ServerId;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -954,10 +812,6 @@ namespace PuppetMaster {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 8: {
-            ServerId = input.ReadInt32();
-            break;
-          }
         }
       }
     #endif
@@ -972,10 +826,6 @@ namespace PuppetMaster {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
-          case 8: {
-            ServerId = input.ReadInt32();
-            break;
-          }
         }
       }
     }
@@ -983,15 +833,15 @@ namespace PuppetMaster {
 
   }
 
-  public sealed partial class ListServerObjectsReply : pb::IMessage<ListServerObjectsReply>
+  public sealed partial class StatusReply : pb::IMessage<StatusReply>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
   #endif
   {
-    private static readonly pb::MessageParser<ListServerObjectsReply> _parser = new pb::MessageParser<ListServerObjectsReply>(() => new ListServerObjectsReply());
+    private static readonly pb::MessageParser<StatusReply> _parser = new pb::MessageParser<StatusReply>(() => new StatusReply());
     private pb::UnknownFieldSet _unknownFields;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pb::MessageParser<ListServerObjectsReply> Parser { get { return _parser; } }
+    public static pb::MessageParser<StatusReply> Parser { get { return _parser; } }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
@@ -1004,54 +854,55 @@ namespace PuppetMaster {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListServerObjectsReply() {
+    public StatusReply() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListServerObjectsReply(ListServerObjectsReply other) : this() {
-      objects_ = other.objects_.Clone();
+    public StatusReply(StatusReply other) : this() {
+      ok_ = other.ok_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListServerObjectsReply Clone() {
-      return new ListServerObjectsReply(this);
+    public StatusReply Clone() {
+      return new StatusReply(this);
     }
 
-    /// <summary>Field number for the "objects" field.</summary>
-    public const int ObjectsFieldNumber = 1;
-    private static readonly pb::FieldCodec<string> _repeated_objects_codec
-        = pb::FieldCodec.ForString(10);
-    private readonly pbc::RepeatedField<string> objects_ = new pbc::RepeatedField<string>();
+    /// <summary>Field number for the "ok" field.</summary>
+    public const int OkFieldNumber = 1;
+    private bool ok_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<string> Objects {
-      get { return objects_; }
+    public bool Ok {
+      get { return ok_; }
+      set {
+        ok_ = value;
+      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
-      return Equals(other as ListServerObjectsReply);
+      return Equals(other as StatusReply);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public bool Equals(ListServerObjectsReply other) {
+    public bool Equals(StatusReply other) {
       if (ReferenceEquals(other, null)) {
         return false;
       }
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if(!objects_.Equals(other.objects_)) return false;
+      if (Ok != other.Ok) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      hash ^= objects_.GetHashCode();
+      if (Ok != false) hash ^= Ok.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1068,7 +919,10 @@ namespace PuppetMaster {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      objects_.WriteTo(output, _repeated_objects_codec);
+      if (Ok != false) {
+        output.WriteRawTag(8);
+        output.WriteBool(Ok);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -1078,7 +932,10 @@ namespace PuppetMaster {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      objects_.WriteTo(ref output, _repeated_objects_codec);
+      if (Ok != false) {
+        output.WriteRawTag(8);
+        output.WriteBool(Ok);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -1088,7 +945,9 @@ namespace PuppetMaster {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      size += objects_.CalculateSize(_repeated_objects_codec);
+      if (Ok != false) {
+        size += 1 + 1;
+      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -1096,154 +955,12 @@ namespace PuppetMaster {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(ListServerObjectsReply other) {
+    public void MergeFrom(StatusReply other) {
       if (other == null) {
         return;
       }
-      objects_.Add(other.objects_);
-      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(pb::CodedInputStream input) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      input.ReadRawMessage(this);
-    #else
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
-            break;
-          case 10: {
-            objects_.AddEntriesFrom(input, _repeated_objects_codec);
-            break;
-          }
-        }
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
-            break;
-          case 10: {
-            objects_.AddEntriesFrom(ref input, _repeated_objects_codec);
-            break;
-          }
-        }
-      }
-    }
-    #endif
-
-  }
-
-  public sealed partial class ListGlobalRequest : pb::IMessage<ListGlobalRequest>
-  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      , pb::IBufferMessage
-  #endif
-  {
-    private static readonly pb::MessageParser<ListGlobalRequest> _parser = new pb::MessageParser<ListGlobalRequest>(() => new ListGlobalRequest());
-    private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pb::MessageParser<ListGlobalRequest> Parser { get { return _parser; } }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pbr::MessageDescriptor Descriptor {
-      get { return global::PuppetMaster.PuppetMasterServiceReflection.Descriptor.MessageTypes[6]; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    pbr::MessageDescriptor pb::IMessage.Descriptor {
-      get { return Descriptor; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListGlobalRequest() {
-      OnConstruction();
-    }
-
-    partial void OnConstruction();
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListGlobalRequest(ListGlobalRequest other) : this() {
-      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListGlobalRequest Clone() {
-      return new ListGlobalRequest(this);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public override bool Equals(object other) {
-      return Equals(other as ListGlobalRequest);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public bool Equals(ListGlobalRequest other) {
-      if (ReferenceEquals(other, null)) {
-        return false;
-      }
-      if (ReferenceEquals(other, this)) {
-        return true;
-      }
-      return Equals(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public override int GetHashCode() {
-      int hash = 1;
-      if (_unknownFields != null) {
-        hash ^= _unknownFields.GetHashCode();
-      }
-      return hash;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public override string ToString() {
-      return pb::JsonFormatter.ToDiagnosticString(this);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void WriteTo(pb::CodedOutputStream output) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      output.WriteRawMessage(this);
-    #else
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(output);
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(ref output);
-      }
-    }
-    #endif
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public int CalculateSize() {
-      int size = 0;
-      if (_unknownFields != null) {
-        size += _unknownFields.CalculateSize();
-      }
-      return size;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(ListGlobalRequest other) {
-      if (other == null) {
-        return;
+      if (other.Ok != false) {
+        Ok = other.Ok;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -1259,184 +976,8 @@ namespace PuppetMaster {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-        }
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
-            break;
-        }
-      }
-    }
-    #endif
-
-  }
-
-  public sealed partial class ListGlobalReply : pb::IMessage<ListGlobalReply>
-  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      , pb::IBufferMessage
-  #endif
-  {
-    private static readonly pb::MessageParser<ListGlobalReply> _parser = new pb::MessageParser<ListGlobalReply>(() => new ListGlobalReply());
-    private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pb::MessageParser<ListGlobalReply> Parser { get { return _parser; } }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pbr::MessageDescriptor Descriptor {
-      get { return global::PuppetMaster.PuppetMasterServiceReflection.Descriptor.MessageTypes[7]; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    pbr::MessageDescriptor pb::IMessage.Descriptor {
-      get { return Descriptor; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListGlobalReply() {
-      OnConstruction();
-    }
-
-    partial void OnConstruction();
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListGlobalReply(ListGlobalReply other) : this() {
-      partitionIds_ = other.partitionIds_.Clone();
-      objectId_ = other.objectId_.Clone();
-      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ListGlobalReply Clone() {
-      return new ListGlobalReply(this);
-    }
-
-    /// <summary>Field number for the "partition_ids" field.</summary>
-    public const int PartitionIdsFieldNumber = 1;
-    private static readonly pb::FieldCodec<int> _repeated_partitionIds_codec
-        = pb::FieldCodec.ForInt32(10);
-    private readonly pbc::RepeatedField<int> partitionIds_ = new pbc::RepeatedField<int>();
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<int> PartitionIds {
-      get { return partitionIds_; }
-    }
-
-    /// <summary>Field number for the "object_id" field.</summary>
-    public const int ObjectIdFieldNumber = 2;
-    private static readonly pb::FieldCodec<int> _repeated_objectId_codec
-        = pb::FieldCodec.ForInt32(18);
-    private readonly pbc::RepeatedField<int> objectId_ = new pbc::RepeatedField<int>();
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<int> ObjectId {
-      get { return objectId_; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public override bool Equals(object other) {
-      return Equals(other as ListGlobalReply);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public bool Equals(ListGlobalReply other) {
-      if (ReferenceEquals(other, null)) {
-        return false;
-      }
-      if (ReferenceEquals(other, this)) {
-        return true;
-      }
-      if(!partitionIds_.Equals(other.partitionIds_)) return false;
-      if(!objectId_.Equals(other.objectId_)) return false;
-      return Equals(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public override int GetHashCode() {
-      int hash = 1;
-      hash ^= partitionIds_.GetHashCode();
-      hash ^= objectId_.GetHashCode();
-      if (_unknownFields != null) {
-        hash ^= _unknownFields.GetHashCode();
-      }
-      return hash;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public override string ToString() {
-      return pb::JsonFormatter.ToDiagnosticString(this);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void WriteTo(pb::CodedOutputStream output) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      output.WriteRawMessage(this);
-    #else
-      partitionIds_.WriteTo(output, _repeated_partitionIds_codec);
-      objectId_.WriteTo(output, _repeated_objectId_codec);
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(output);
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      partitionIds_.WriteTo(ref output, _repeated_partitionIds_codec);
-      objectId_.WriteTo(ref output, _repeated_objectId_codec);
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(ref output);
-      }
-    }
-    #endif
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public int CalculateSize() {
-      int size = 0;
-      size += partitionIds_.CalculateSize(_repeated_partitionIds_codec);
-      size += objectId_.CalculateSize(_repeated_objectId_codec);
-      if (_unknownFields != null) {
-        size += _unknownFields.CalculateSize();
-      }
-      return size;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(ListGlobalReply other) {
-      if (other == null) {
-        return;
-      }
-      partitionIds_.Add(other.partitionIds_);
-      objectId_.Add(other.objectId_);
-      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(pb::CodedInputStream input) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      input.ReadRawMessage(this);
-    #else
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
-            break;
-          case 10:
           case 8: {
-            partitionIds_.AddEntriesFrom(input, _repeated_partitionIds_codec);
-            break;
-          }
-          case 18:
-          case 16: {
-            objectId_.AddEntriesFrom(input, _repeated_objectId_codec);
+            Ok = input.ReadBool();
             break;
           }
         }
@@ -1453,14 +994,8 @@ namespace PuppetMaster {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
-          case 10:
           case 8: {
-            partitionIds_.AddEntriesFrom(ref input, _repeated_partitionIds_codec);
-            break;
-          }
-          case 18:
-          case 16: {
-            objectId_.AddEntriesFrom(ref input, _repeated_objectId_codec);
+            Ok = input.ReadBool();
             break;
           }
         }
