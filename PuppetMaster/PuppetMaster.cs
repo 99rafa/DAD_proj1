@@ -55,14 +55,17 @@ namespace PuppetMaster {
                     break;
                 case "Server":
                     String server_id = args[1];
-                    String url = args[2];
+                    String url = args[2];   //ex: localhost:1001
+                    String min_delay = args[3];
+                    String max_delay = args[4];
                     System.Diagnostics.Debug.WriteLine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
                    
                     Process process = new Process();
-                    servers.Add(server_id, url);
+                    if(!servers.ContainsKey(server_id))
+                        servers.Add(server_id, url);
                     //Path to server .exe , maybe it should be the "release" version instead of "debug"
                     process.StartInfo.FileName = "..\\..\\..\\..\\GStoreServer\\bin\\Debug\\netcoreapp3.1\\GStoreServer.exe";
-                    process.StartInfo.Arguments = "";
+                    process.StartInfo.Arguments = server_id + " " + url + " " + min_delay + " " + max_delay;
                     process.Start();
                     break;
                 case "Partition":

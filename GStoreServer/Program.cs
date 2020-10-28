@@ -6,6 +6,7 @@ using System.IO;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace gStoreServer {
     // GStoreServerService is the namespace defined in the protobuf
@@ -78,10 +79,15 @@ namespace gStoreServer {
     class Program {
         
         public static void Main(string[] args) {
-            const int port = 1001;
-            const string hostname = "localhost";
+            //const int port = 1001;
+            //const string hostname = "localhost";
             string startupMessage;
             ServerPort serverPort;
+
+            String hostname = Regex.Matches(args[1], "[A-Za-z]+[^:]")[0].ToString();
+            int port = int.Parse(Regex.Matches(args[1], "[^:]*[0-9]+")[0].ToString());
+            int min_delay = int.Parse(args[2]);
+            int max_delay = int.Parse(args[3]);
 
             serverPort = new ServerPort(hostname, port, ServerCredentials.Insecure);
             startupMessage = "Insecure GStoreServer server listening on port " + port;
@@ -89,12 +95,13 @@ namespace gStoreServer {
             Server server = new Server
             {
                 Services = { GStoreServerService.BindService(new ServerService()) },
-            Ports = { serverPort }
-        };
+                Ports = { serverPort }
+            };
 
             server.Start();
 
             Console.WriteLine(startupMessage);
+            Console.WriteLine("Server_id: " + args[0] + "\t hostname: " + hostname + "\t min_delay: "+min_delay+"\t max_delay: "+ max_delay);
             //Configuring HTTP for client connections in Register method
             AppContext.SetSwitch(
   "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
