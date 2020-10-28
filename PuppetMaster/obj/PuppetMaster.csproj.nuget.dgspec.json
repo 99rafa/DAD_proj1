@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Rafael\\Documents\\DAD\\project\\PuppetMaster\\PuppetMaster.csproj": {}
+    "C:\\Users\\rap19\\source\\repos\\DAD_proj1\\PuppetMaster\\PuppetMaster.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Rafael\\Documents\\DAD\\project\\PuppetMaster\\PuppetMaster.csproj": {
+    "C:\\Users\\rap19\\source\\repos\\DAD_proj1\\PuppetMaster\\PuppetMaster.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Rafael\\Documents\\DAD\\project\\PuppetMaster\\PuppetMaster.csproj",
+        "projectUniqueName": "C:\\Users\\rap19\\source\\repos\\DAD_proj1\\PuppetMaster\\PuppetMaster.csproj",
         "projectName": "PuppetMaster",
-        "projectPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\PuppetMaster\\PuppetMaster.csproj",
-        "packagesPath": "C:\\Users\\Rafael\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\PuppetMaster\\obj\\",
+        "projectPath": "C:\\Users\\rap19\\source\\repos\\DAD_proj1\\PuppetMaster\\PuppetMaster.csproj",
+        "packagesPath": "C:\\Users\\rap19\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\rap19\\source\\repos\\DAD_proj1\\PuppetMaster\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Rafael\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\rap19\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -45,6 +45,10 @@
             "Grpc.Core": {
               "target": "Package",
               "version": "[2.33.1, )"
+            },
+            "Grpc.Net.Client": {
+              "target": "Package",
+              "version": "[2.32.0, )"
             },
             "Grpc.Tools": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",

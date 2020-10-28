@@ -14,10 +14,12 @@ namespace PuppetMaster
 {
     public partial class Form1 : Form
     {
+        PuppetMaster puppetMaster;
         int pos = 0; // line being run
         public Form1()
         {
             InitializeComponent();
+            puppetMaster = new PuppetMaster();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -82,6 +84,7 @@ namespace PuppetMaster
 
         private void new_command_button_Click(object sender, EventArgs e)
         {
+            puppetMaster.addComand(newCommand.Text);
             if (scriptBox.Lines.Length > 0 && scriptBox.Text[scriptBox.Text.Length - 1] != '\n')
                     scriptBox.Text += "\r\n";
             scriptBox.Text += newCommand.Text + "\r\n";
@@ -120,14 +123,14 @@ namespace PuppetMaster
 
         private void label2_Click(object sender, EventArgs e)
         {
-
+            
         }
 
         private void cont_button_Click(object sender, EventArgs e)
         {
+            puppetMaster.runCommands();
             un_highlight_previous_line(++pos);
             pos = scriptBox.Lines.Length - 1;
-
         }
 
         private void label3_Click(object sender, EventArgs e)

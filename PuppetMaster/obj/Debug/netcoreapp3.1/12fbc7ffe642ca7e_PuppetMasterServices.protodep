@@ -1,2 +1,0 @@
-obj\Debug\netcoreapp3.1\protos/PuppetMasterServices.cs \
-obj\Debug\netcoreapp3.1\protos/PuppetMasterServicesGrpc.cs: protos/PuppetMasterServices.proto

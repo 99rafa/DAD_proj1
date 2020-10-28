@@ -1,0 +1,2 @@
+obj\Release\netcoreapp3.1\protos/GStoreClient.cs \
+obj\Release\netcoreapp3.1\protos/GStoreClientGrpc.cs: protos/GStoreClient.proto

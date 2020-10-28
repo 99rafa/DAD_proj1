@@ -44,7 +44,7 @@ message FreezeRequest {
 	
 }
 
-´message FreezeReply {
+message FreezeReply {
 	bool ok = 1;
 }
 
