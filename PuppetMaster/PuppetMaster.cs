@@ -17,7 +17,7 @@ namespace PuppetMaster {
         private Server server;
 
         List<String> commandQueue= new List<String>();
-        Dictionary<String, String> servers = new Dictionary<String, String>();
+        Dictionary<String, String> servers_url = new Dictionary<String, String>();
 
         public PuppetMaster() {
             // setup the puppet master service
@@ -50,25 +50,42 @@ namespace PuppetMaster {
 
         public void executeCommand(String c) {
             string[] args = c.Split(" ");
+            String server_id;
             switch (args[0]) {
                 case "ReplicationFactor":
                     break;
                 case "Server":
-                    String server_id = args[1];
+                    server_id = args[1];
                     String url = args[2];   //ex: localhost:1001
                     String min_delay = args[3];
                     String max_delay = args[4];
                     System.Diagnostics.Debug.WriteLine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
                    
                     Process process = new Process();
-                    if(!servers.ContainsKey(server_id))
-                        servers.Add(server_id, url);
+                    if(!servers_url.ContainsKey(server_id))
+                        servers_url.Add(server_id, url);
                     //Path to server .exe , maybe it should be the "release" version instead of "debug"
                     process.StartInfo.FileName = "..\\..\\..\\..\\GStoreServer\\bin\\Debug\\netcoreapp3.1\\GStoreServer.exe";
                     process.StartInfo.Arguments = server_id + " " + url + " " + min_delay + " " + max_delay;
                     process.Start();
                     break;
                 case "Partition":
+                    int r = int.Parse(args[1]);
+                    String part_name = args[2];
+                    for (int i = 0; i < r; i++) {
+                        server_id = args[i + 3];
+                        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                        GrpcChannel channel = GrpcChannel.ForAddress("http://" + servers_url[server_id]);
+                        PuppetMasterService.PuppetMasterServiceClient client = new PuppetMasterService.PuppetMasterServiceClient(channel);
+                        PartitionReply reply = client.Partition(new PartitionRequest { 
+                            PartitionName = part_name
+                        });
+                        if (reply.Ok == true) {
+                            System.Diagnostics.Debug.WriteLine("Received answer from partition: " + reply.Ok);
+                        } else {
+                            System.Diagnostics.Debug.WriteLine("Received answer from partition f: " + reply.Ok);
+                        }
+                    }
                     break;
                 case "Client":
                     break;

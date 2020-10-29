@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="protos\PuppetMasterService.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.13.0" />
     <PackageReference Include="Grpc.Core" Version="2.32.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.32.0" />
@@ -15,6 +19,7 @@
     </PackageReference>
     <Protobuf Include="protos\GStoreServer.proto" GrpcServices="Server" />
     <Protobuf Include="protos\GStoreClient.proto" GrpcServices="Client" />
+    <Protobuf Include="protos\PuppetMasterService.proto" GrpcServices="Both" />
   </ItemGroup>
 
 </Project>

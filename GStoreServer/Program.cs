@@ -7,11 +7,28 @@ using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using PuppetMaster;
 
 namespace gStoreServer {
+
+    public class PuppetServerService : PuppetMasterService.PuppetMasterServiceBase {
+        public PuppetServerService() {
+
+        }
+
+        public override Task<PartitionReply> Partition(PartitionRequest request, ServerCallContext context) {
+
+            Console.WriteLine("Received partition request: partition_name: " + request.PartitionName);
+
+            return Task.FromResult(new PartitionReply {
+                Ok = true
+            });
+
+        }
+    }
     // GStoreServerService is the namespace defined in the protobuf
     // GStoreServerServiceBase is the generated base implementation of the service
-    public class ServerService : GStoreServerService.GStoreServerServiceBase {
+    public class ServerService : GStoreServerService.GStoreServerServiceBase{
         private GrpcChannel channel;
         private Dictionary<string, GStoreClientService.GStoreClientServiceClient> clientMap =
             new Dictionary<string, GStoreClientService.GStoreClientServiceClient>();
@@ -94,7 +111,8 @@ namespace gStoreServer {
 
             Server server = new Server
             {
-                Services = { GStoreServerService.BindService(new ServerService()) },
+                Services = { GStoreServerService.BindService(new ServerService()),
+                             PuppetMasterService.BindService(new PuppetServerService())},
                 Ports = { serverPort }
             };
 
