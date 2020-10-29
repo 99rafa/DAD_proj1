@@ -12,15 +12,18 @@ namespace PuppetMaster {
     class PuppetMaster {
         public const String hostname = "localhost";
         public const String port = "10001";
-        private readonly GrpcChannel channel;
-        private readonly PuppetMasterService.PuppetMasterServiceClient client;
+        
         private Server server;
 
         Queue<String> commandQueue= new Queue<String>();
-        Dictionary<String, String> servers = new Dictionary<String, String>();
-
+        List<GrpcChannel> channels = new List<GrpcChannel>();
+        Dictionary<String, PuppetMasterService.PuppetMasterServiceClient> servers = new Dictionary<String, PuppetMasterService.PuppetMasterServiceClient>();
+        Dictionary<String, PuppetMasterService.PuppetMasterServiceClient> clients = new Dictionary<String, PuppetMasterService.PuppetMasterServiceClient>();
+        PuppetMasterService.PuppetMasterServiceClient s;
+  
         public PuppetMaster() {
             // setup the puppet master service
+            
             server = new Server {
                 Services = { PuppetMasterService.BindService(new PuppetService()) },
                 Ports = { new ServerPort(hostname, Int32.Parse(port), ServerCredentials.Insecure) }
@@ -29,8 +32,6 @@ namespace PuppetMaster {
 
             AppContext.SetSwitch(
                 "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            //channel = GrpcChannel.ForAddress("http://" + serverHostname + ":" + serverPort);
-            //client = new PuppetMasterService.PuppetMasterServiceClient(channel);
 
             
         }
@@ -52,6 +53,34 @@ namespace PuppetMaster {
             executeCommand(commandQueue.Dequeue());
         }
 
+        private void addServerToDict(String server_id, String url){
+            GrpcChannel channel = GrpcChannel.ForAddress("http://" + url);
+            PuppetMasterService.PuppetMasterServiceClient client = new PuppetMasterService.PuppetMasterServiceClient(channel);
+            channels.Add(channel);
+            servers.Add(server_id, client);
+        }
+        private void addClientToDict(String username, String url)
+        {
+            GrpcChannel channel = GrpcChannel.ForAddress("http://" + url);
+            PuppetMasterService.PuppetMasterServiceClient client = new PuppetMasterService.PuppetMasterServiceClient(channel);
+            channels.Add(channel);
+            clients.Add(username, client);
+        }
+
+        public void Status()
+        {
+
+            foreach (var server in servers)
+            {
+                _ = server.Value.StatusAsync(new StatusRequest { });
+            }
+            foreach (var client in clients)
+            {
+                _ = client.Value.StatusAsync(new StatusRequest { });
+            }
+
+        }
+
         public void executeCommand(String c) {
             string[] args = c.Split(" ");
             switch (args[0]) {
@@ -66,7 +95,7 @@ namespace PuppetMaster {
                    
                     Process process = new Process();
                     if(!servers.ContainsKey(server_id))
-                        servers.Add(server_id, url);
+                        addServerToDict(server_id, url);
                     //Path to server .exe , maybe it should be the "release" version instead of "debug"
                     process.StartInfo.FileName = "..\\..\\..\\..\\GStoreServer\\bin\\Debug\\netcoreapp3.1\\GStoreServer.exe";
                     process.StartInfo.Arguments = server_id + " " + url + " " + min_delay + " " + max_delay;
@@ -77,6 +106,7 @@ namespace PuppetMaster {
                 case "Client":
                     break;
                 case "Status":
+                    Status();
                     break;
                 case "Crash":
                     break;
