@@ -84,6 +84,10 @@ namespace PuppetMaster {
                     break;
                 case "Unfreeze":
                     break;
+                case "Wait":
+                    string ms = args[1];
+                    System.Threading.Thread.Sleep(int.Parse(ms));
+                    break;
                 default:
                     break;
             }
