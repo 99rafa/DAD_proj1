@@ -114,19 +114,20 @@ namespace PuppetMaster {
                 case "Partition":
                     int r = int.Parse(args[1]);
                     String part_name = args[2];
+                    List<String> server_urls= new List<String>();
+                    for (int i = 0; i < r; i++) {
+                        server_urls.Add(servers[args[i+3]].url);
+                    }                    
+
                     for (int i = 0; i < r; i++) {
                         server_id = args[i + 3];
-                        //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-                        //GrpcChannel channel = GrpcChannel.ForAddress("http://" + servers[server_id].url);
-                        //PuppetMasterService.PuppetMasterServiceClient client = new PuppetMasterService.PuppetMasterServiceClient(channel);
-                        PartitionReply reply = servers[server_id].service.Partition(new PartitionRequest { 
-                            PartitionName = part_name
+                        PartitionReply reply = servers[server_id].service.Partition(new PartitionRequest {
+                            PartitionName = part_name,
+                            ServersUrls = { server_urls }
                         });
-                        if (reply.Ok == true) {
-                            System.Diagnostics.Debug.WriteLine("Received answer from partition: " + reply.Ok);
-                        } else {
-                            System.Diagnostics.Debug.WriteLine("Received answer from partition f: " + reply.Ok);
-                        }
+                       
+                        System.Diagnostics.Debug.WriteLine("Received answer from partition: " + reply.Ok);
+                        
                     }
                     break;
                 case "Client":
