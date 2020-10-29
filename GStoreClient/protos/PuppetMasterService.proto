@@ -1,7 +1,5 @@
 ﻿syntax = "proto3";
 
-option csharp_namespace = "PuppetMaster";
-
 service PuppetMasterService {
 	rpc ReplicationFactor (ReplicationFactorRequest) returns (ReplicationFactorReply);
 	rpc Partition (PartitionRequest)  returns (PartitionReply);

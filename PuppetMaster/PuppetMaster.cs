@@ -35,7 +35,6 @@ namespace PuppetMaster {
         List<GrpcChannel> channels = new List<GrpcChannel>();
         Dictionary<String, PuppetMasterService.PuppetMasterServiceClient> servers = new Dictionary<String, PuppetMasterService.PuppetMasterServiceClient>();
         Dictionary<String, PuppetMasterService.PuppetMasterServiceClient> clients = new Dictionary<String, PuppetMasterService.PuppetMasterServiceClient>();
-        PuppetMasterService.PuppetMasterServiceClient s;
   
         public PuppetMaster() {
             // setup the puppet master service

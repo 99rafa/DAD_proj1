@@ -7,7 +7,6 @@ using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
-using PuppetMaster;
 
 namespace gStoreServer {
 
@@ -21,6 +20,18 @@ namespace gStoreServer {
             Console.WriteLine("Received partition request: partition_name: " + request.PartitionName);
 
             return Task.FromResult(new PartitionReply {
+                Ok = true
+            });
+
+        }
+
+        public override Task<StatusReply> Status(StatusRequest request, ServerCallContext context)
+        {
+
+            Console.WriteLine("Status request received!!");
+
+            return Task.FromResult(new StatusReply
+            {
                 Ok = true
             });
 
