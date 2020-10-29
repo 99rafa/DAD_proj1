@@ -66,6 +66,7 @@ namespace PuppetMaster
 
             if (pos < scriptBox.Lines.Length - 1)
             {
+                puppetMaster.runNextCommand();
                 highlight_line(++pos);
                 un_highlight_previous_line(pos);
             }

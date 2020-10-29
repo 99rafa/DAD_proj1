@@ -16,7 +16,7 @@ namespace PuppetMaster {
         private readonly PuppetMasterService.PuppetMasterServiceClient client;
         private Server server;
 
-        List<String> commandQueue= new List<String>();
+        Queue<String> commandQueue= new Queue<String>();
         Dictionary<String, String> servers = new Dictionary<String, String>();
 
         public PuppetMaster() {
@@ -36,7 +36,7 @@ namespace PuppetMaster {
         }
 
         public void addComand(String command) {
-            commandQueue.Add(command);
+            commandQueue.Enqueue(command);
             System.Diagnostics.Debug.WriteLine("added command:", command);
         }
 
@@ -46,6 +46,10 @@ namespace PuppetMaster {
                 System.Diagnostics.Debug.WriteLine("executing command:",command);
             }
             commandQueue.Clear();
+        }
+
+        public void runNextCommand(){
+            executeCommand(commandQueue.Dequeue());
         }
 
         public void executeCommand(String c) {
