@@ -30,7 +30,6 @@ namespace PuppetMaster {
 
         Dictionary<String, ServerStruct> servers = new Dictionary<String, ServerStruct>();
         Dictionary<String, PuppetMasterService.PuppetMasterServiceClient> clients = new Dictionary<String, PuppetMasterService.PuppetMasterServiceClient>();
-        PuppetMasterService.PuppetMasterServiceClient s;
   
         public PuppetMaster() {
             // setup the puppet master service
