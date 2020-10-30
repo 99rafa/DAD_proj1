@@ -15,6 +15,7 @@
     </PackageReference>
    <Protobuf Include="protos\GStoreClient.proto" GrpcServices="Server" />
     <Protobuf Include="protos\GStoreServer.proto" GrpcServices="Client" />
+	  <Protobuf Include="protos\PuppetMasterService.proto" GrpcServices="Both" />
   </ItemGroup>
 
 </Project>

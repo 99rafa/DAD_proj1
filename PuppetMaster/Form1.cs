@@ -46,13 +46,12 @@ namespace PuppetMaster
                     size = text.Length;
                     scriptBox.Text += text;
                     highlight_line(pos);
-                   
+                    uploadScriptCommands();
                 }
                 catch (IOException)
                 {
                     Console.WriteLine("IO Exception caught");
                 }
-
             }
         }
 
@@ -66,6 +65,7 @@ namespace PuppetMaster
 
             if (pos < scriptBox.Lines.Length - 1)
             {
+                puppetMaster.runNextCommand();
                 highlight_line(++pos);
                 un_highlight_previous_line(pos);
             }
@@ -136,6 +136,14 @@ namespace PuppetMaster
         private void label3_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void uploadScriptCommands()
+        {
+            foreach (var line in scriptBox.Lines)
+            {
+                puppetMaster.addComand(line);
+            }
         }
     }
 }

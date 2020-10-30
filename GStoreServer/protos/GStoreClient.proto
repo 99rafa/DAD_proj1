@@ -18,7 +18,7 @@ message RecvMsgReply {
 message ReadValueRequest {
   string partition_id = 1;
   string object_id = 2;
-  string server_id = 3;
+  
 }
 message ReadValueReply {
 	string value = 1;

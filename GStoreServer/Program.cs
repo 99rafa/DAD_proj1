@@ -9,9 +9,57 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 
 namespace gStoreServer {
+
+    public class PuppetServerService : PuppetMasterService.PuppetMasterServiceBase {
+        public String url;
+        //List of servers in each partition, if an entry for a partition exists then this server belongs to that partition
+        public Dictionary<String, List<String>> partitionServers = new Dictionary<String, List<String>>();
+        //List of replica names where this server is the master replica
+        List<String> replicaMaster = new List<String>();
+        public PuppetServerService(String h) {
+            url = h;
+        }
+
+        public override Task<PartitionReply> Partition(PartitionRequest request, ServerCallContext context) {
+            Console.WriteLine("Received partition request: partition_name: " + request.PartitionName);
+            if (!partitionServers.ContainsKey(request.PartitionName)) {
+                partitionServers.Add(request.PartitionName, new List<String>());
+            } else {
+                Console.WriteLine("Received partition creation request that already exists: " + request.PartitionName);
+            }
+            for(int i = 0; i < request.ServersUrls.Count; i++) {
+                //Add to replicaMaster if this server is the master
+                if (request.ServersUrls[i].Equals(url)) {
+                    if (i == 0) {
+                        Console.WriteLine("\tThis Server: " + url + "  is master of partition: " + request.PartitionName);
+                        replicaMaster.Add(request.PartitionName); 
+                    }
+                } else {//else add server url to the list of servers from this partition
+                    Console.WriteLine("\tAdded server " + request.ServersUrls[i] +  " to local list of partition servers: " + request.PartitionName);
+                    partitionServers[request.PartitionName].Add(request.ServersUrls[i]);
+                }
+            }
+            return Task.FromResult(new PartitionReply {
+                Ok = true
+            });
+
+        }
+
+        public override Task<StatusReply> Status(StatusRequest request, ServerCallContext context)
+        {
+
+            Console.WriteLine("Status request received!!");
+
+            return Task.FromResult(new StatusReply
+            {
+                Ok = true
+            });
+
+        }
+    }
     // GStoreServerService is the namespace defined in the protobuf
     // GStoreServerServiceBase is the generated base implementation of the service
-    public class ServerService : GStoreServerService.GStoreServerServiceBase {
+    public class ServerService : GStoreServerService.GStoreServerServiceBase{
         private GrpcChannel channel;
         private Dictionary<string, GStoreClientService.GStoreClientServiceClient> clientMap =
             new Dictionary<string, GStoreClientService.GStoreClientServiceClient>();
@@ -94,7 +142,8 @@ namespace gStoreServer {
 
             Server server = new Server
             {
-                Services = { GStoreServerService.BindService(new ServerService()) },
+                Services = { GStoreServerService.BindService(new ServerService()),
+                             PuppetMasterService.BindService(new PuppetServerService(hostname + ":" + port))},
                 Ports = { serverPort }
             };
 
