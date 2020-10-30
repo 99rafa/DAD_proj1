@@ -1,6 +1,7 @@
 ﻿using Grpc.Core;
 using Grpc.Net.Client;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -15,63 +16,74 @@ namespace GStoreClient {
         bool AddMsgtoGUI(string s);
     }
     public class GStoreClient : IGStoreClientService {
-        private readonly GrpcChannel channel;
-        private readonly GStoreServerService.GStoreServerServiceClient client;
+        private  GrpcChannel channel;
         private Server server;
-        private readonly Form1 guiWindow;
         private string nick;
         private string hostname;
         private AsyncUnaryCall<BcastMsgReply> lastMsgCall;
+        private Dictionary<string, GStoreServerService.GStoreServerServiceClient> serverMap =
+            new Dictionary<string, GStoreServerService.GStoreServerServiceClient>();
+        private Dictionary<string, ArrayList> partitionMap = new Dictionary<string, ArrayList>();
 
-        public GStoreClient(Form1 guiWindow, bool sec, string serverHostname, int serverPort, 
-                             string clientHostname) {
-            this.hostname = clientHostname;
-            this.guiWindow = guiWindow;
-            // setup the client side
-
-                AppContext.SetSwitch(
-                    "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-                channel = GrpcChannel.ForAddress("http://" + serverHostname + ":" + serverPort.ToString());
+        public GStoreClient() {
    
-            client = new GStoreServerService.GStoreServerServiceClient(channel);
+           
         }
 
         public bool AddMsgtoGUI(string s) {
-            this.guiWindow.BeginInvoke(new DelAddMsg(guiWindow.AddMsgtoGUI), new object[] { s });
             return true;
         }
 
-        public List<string> Register(string nick, string port) {
-            this.nick = nick;
-            // setup the client service
-            server = new Server
-            {
-                Services = { GStoreClientService.BindService(new ClientService(this)) },
-                Ports = { new ServerPort(hostname, Int32.Parse(port), ServerCredentials.Insecure) }
-            };
-            server.Start();
-            GStoreClientRegisterReply reply = client.Register(new GStoreClientRegisterRequest
-            {
-                Nick = nick,
-                Url = "http://localhost:" + port
-            }) ;
-            
-            List<string> result = new List<string>();
-            foreach (User u in reply.Users) {
-                result.Add(u.Nick);
-            }
-            return result;
+        private void addServerToDict(String server_id, String url)
+        {
+            GrpcChannel channel = GrpcChannel.ForAddress("http://" + url);
+            GStoreServerService.GStoreServerServiceClient client = new GStoreServerService.GStoreServerServiceClient(channel);
+            serverMap.Add(server_id, client);
         }
 
-        public async Task BcastMsg(string m) {
-            BcastMsgReply reply;
-            if (lastMsgCall != null) {
-                reply = await lastMsgCall.ResponseAsync;          
-            }
-            lastMsgCall = client.BcastMsgAsync(new BcastMsgRequest { 
-                Nick = this.nick,
-                Msg = m
+
+        private void  addPartitionToDict(String id, ArrayList servers)
+        {
+            partitionMap.Add(id, servers);
+        }
+
+
+        public String ReadValue(
+           string partitionId, string objectId, string serverId)
+        {
+
+            AppContext.SetSwitch(
+                    "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
+            GStoreServerService.GStoreServerServiceClient client = serverMap[serverId];
+
+            ReadValueReply reply = client.ReadValue(new ReadValueRequest
+            {
+               PartitionId = partitionId,
+               ObjectId = objectId,
+               ServerId = serverId
             });
+
+            return reply.Value;
+        }
+
+        public bool WriteValue(
+           string partitionId, string objectId, string value)
+        {
+
+            AppContext.SetSwitch(
+                    "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
+            GStoreServerService.GStoreServerServiceClient client = serverMap[partitionMap[partitionId].IndexOf(0)];
+
+            WriteValueReply reply = client.WriteValue(new WriteValueRequest
+            {
+                PartitionId = partitionId,
+                ObjectId = objectId,
+                Value = value
+            });
+
+            return reply.Ok;
         }
 
         public void ServerShutdown() {
@@ -80,25 +92,33 @@ namespace GStoreClient {
     }
 
 
-    public class ClientService : GStoreClientService.GStoreClientServiceBase {
+    public class ClientService : GStoreClientService.GStoreClientServiceBase
+    {
         IGStoreClientService clientLogic;
+        
 
-        public ClientService(IGStoreClientService clientLogic) {
+        public ClientService(IGStoreClientService clientLogic)
+        {
             this.clientLogic = clientLogic;
         }
 
         public override Task<RecvMsgReply> RecvMsg(
-            RecvMsgRequest request, ServerCallContext context) {
+            RecvMsgRequest request, ServerCallContext context)
+        {
             return Task.FromResult(UpdateGUIwithMsg(request));
         }
 
-        public RecvMsgReply UpdateGUIwithMsg(RecvMsgRequest request) {
-           if ( clientLogic.AddMsgtoGUI(request.Msg)) { 
-            return new RecvMsgReply
+        public RecvMsgReply UpdateGUIwithMsg(RecvMsgRequest request)
+        {
+            if (clientLogic.AddMsgtoGUI(request.Msg))
             {
-                Ok = true
-            };
-            } else {
+                return new RecvMsgReply
+                {
+                    Ok = true
+                };
+            }
+            else
+            {
                 return new RecvMsgReply
                 {
                     Ok = false
@@ -106,5 +126,6 @@ namespace GStoreClient {
 
             }
         }
+
     }
 }

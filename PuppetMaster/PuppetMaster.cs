@@ -75,12 +75,14 @@ namespace PuppetMaster {
                     String username = args[1];
                     String client_url = args[2];
                     String script_file = args[3];
+                    System.Diagnostics.Debug.WriteLine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+
                     Process client_process = new Process();
                     if (!clients.ContainsKey(username))
                         clients.Add(username, client_url);
                     client_process.StartInfo.FileName = "..\\..\\..\\..\\GStoreClient\\bin\\Debug\\netcoreapp3.1\\GStoreClient.exe";
                     client_process.StartInfo.Arguments = username + " " + client_url + " " + script_file ;
-                    process.Start();
+                    client_process.Start();
                     break;
                 case "Status":
                     break;
