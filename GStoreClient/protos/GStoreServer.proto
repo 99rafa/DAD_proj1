@@ -3,10 +3,11 @@
 service GStoreServerService {
   rpc Register (GStoreClientRegisterRequest) returns (GStoreClientRegisterReply);
   rpc BcastMsg (BcastMsgRequest) returns (BcastMsgReply);
-   rpc ReadValue (ReadValueRequest) returns (ReadValueReply);
+  rpc ReadValue (ReadValueRequest) returns (ReadValueReply);
   rpc WriteValue (WriteValueRequest) returns (WriteValueReply);
   rpc ListServerObjects (ListServerObjectsRequest)  returns (ListServerObjectsReply);
   rpc ListGlobal (ListGlobalRequest) returns (ListGlobalReply);
+   
 }
 message GStoreClientRegisterRequest {
   string nick = 1;
@@ -58,6 +59,8 @@ message ListGlobalRequest {
 }
 
 message ListGlobalReply {
-	repeated int32 partition_ids = 1;
-	repeated int32 object_id = 2;
+	repeated string partition_ids = 1;
+	repeated string object_id = 2;
 }
+
+

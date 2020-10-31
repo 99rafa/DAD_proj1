@@ -2,7 +2,7 @@
 
 service GStoreClientService {
   rpc RecvMsg (RecvMsgRequest) returns (RecvMsgReply);
-
+  
 }
 
 message RecvMsgRequest {
@@ -11,4 +11,5 @@ message RecvMsgRequest {
 message RecvMsgReply {
 	bool ok = 1;
 }
+
 

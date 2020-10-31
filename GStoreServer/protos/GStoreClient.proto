@@ -2,10 +2,7 @@
 
 service GStoreClientService {
   rpc RecvMsg (RecvMsgRequest) returns (RecvMsgReply);
-  rpc ReadValue (ReadValueRequest) returns (ReadValueReply);
-  rpc WriteValue (WriteValueRequest) returns (WriteValueReply);
-  rpc ListServerObjects (ListServerObjectsRequest)  returns (ListServerObjectsReply);
-  rpc ListGlobal (ListGlobalRequest) returns (ListGlobalReply);
+  
 }
 
 message RecvMsgRequest {
@@ -15,38 +12,3 @@ message RecvMsgReply {
 	bool ok = 1;
 }
 
-message ReadValueRequest {
-  string partition_id = 1;
-  string object_id = 2;
-  
-}
-message ReadValueReply {
-	string value = 1;
-}
-
-message WriteValueRequest {
-	string partition_id = 1;
-	string object_id = 2;
-	string value = 3;
-}
-
-message WriteValueReply {
-	bool ok = 1;
-}
-
-message ListServerObjectsRequest {
-	string server_id = 1;
-}
-
-message ListServerObjectsReply {
-	repeated string objects = 1;
-}
-
-message ListGlobalRequest {
-
-}
-
-message ListGlobalReply {
-	repeated int32 partition_ids = 1;
-	repeated int32 object_id = 2;
-}
