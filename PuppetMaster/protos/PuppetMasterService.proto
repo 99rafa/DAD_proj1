@@ -17,7 +17,7 @@ message ReplicationFactorReply {
 }
 
 message PartitionRequest {
-	string partition_name = 1;
+	string partition_id = 1;
 	repeated string servers_urls = 2;
 }
 

@@ -41,16 +41,42 @@ namespace GStoreClient {
         // dictionary with partitionID as key and list of serverID's
         private Dictionary<string, List<string>> partitionMap = new Dictionary<string, List<string>>();
 
-        public GStoreClient(String user, String host ) {
+        public GStoreClient(String user, String host, String args ) {
             username = user;
             hostname = host;
+
+            //partitions come in command line format: -p partition_id partition_master_id partition_master_url other_servers_id other_servers_url -p 
+            //maybe it should not be here as it is command line logic
+
+            String[] partitions = args.Split("-p ");
+            String[] fields;
+            String partition_id;
+            List<string> partitionServers = new List<string>();
+
+            foreach ( var partition in partitions)
+            {
+                fields = args.Split("-p ");
+  
+                partition_id = fields[0];
+
+                for (int i = 1; i < fields.Length; i+=2)
+                {
+                    partitionServers.Add(fields[i]);
+                    AddServerToDict(fields[i], fields[i+1]);
+                }
+                AddPartitionToDict(partition_id, partitionServers);
+                
+                
+                Array.Clear(fields, 0, fields.Length);
+                partitionServers.Clear();
+            }
         }
 
         public bool AddMsgtoGUI(string s) {
             return true;
         }
 
-        private void addServerToDict(String server_id, String url)
+        private void AddServerToDict(String server_id, String url)
         {
             GrpcChannel channel = GrpcChannel.ForAddress("http://" + url);
             GStoreServerService.GStoreServerServiceClient client = new GStoreServerService.GStoreServerServiceClient(channel);
@@ -59,7 +85,7 @@ namespace GStoreClient {
         }
 
 
-        private void  addPartitionToDict(String id, List<string> servers)
+        private void  AddPartitionToDict(String id, List<string> servers)
         {
             partitionMap.Add(id, servers);
         }
