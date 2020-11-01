@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreClient\\GStoreClient.csproj": {}
+    "C:\\Users\\User\\Documents\\DAD_proj1\\GStoreClient\\GStoreClient.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreClient\\GStoreClient.csproj": {
+    "C:\\Users\\User\\Documents\\DAD_proj1\\GStoreClient\\GStoreClient.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreClient\\GStoreClient.csproj",
+        "projectUniqueName": "C:\\Users\\User\\Documents\\DAD_proj1\\GStoreClient\\GStoreClient.csproj",
         "projectName": "GStoreClient",
-        "projectPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreClient\\GStoreClient.csproj",
-        "packagesPath": "C:\\Users\\Rafael\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreClient\\obj\\",
+        "projectPath": "C:\\Users\\User\\Documents\\DAD_proj1\\GStoreClient\\GStoreClient.csproj",
+        "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\User\\Documents\\DAD_proj1\\GStoreClient\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Rafael\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [

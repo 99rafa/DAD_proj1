@@ -24,7 +24,6 @@ namespace GStoreClient
         [STAThread]
         static void Main(string [] args) {
             GStoreClient client;
-
             Console.WriteLine("Username: " + args[0] + "\t hostname: " + args[1] + "\t script_path: " + args[2] );
 
             String username = args[0];
@@ -41,23 +40,18 @@ namespace GStoreClient
                 partitions += " " + args[i];
             }
 
-
             ServerPort serverPort = new ServerPort(hostname, port, ServerCredentials.Insecure);
-
             Server server = new Server
             {
                 Services = { PuppetMasterService.BindService(new PuppetClientService(hostname + ":" + port)) },
                 Ports = {serverPort}
             };
             server.Start();
-
             AppContext.SetSwitch(
                     "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
             client = new GStoreClient(username, hostname, partitions);
-
             client.readScriptFile(ops_file);
-
             while (true);
         }
     }
