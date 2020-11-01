@@ -54,8 +54,6 @@ namespace GStoreClient
             AppContext.SetSwitch(
                     "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
-            Console.WriteLine(partitions);
-
             client = new GStoreClient(username, hostname, partitions);
 
             client.readScriptFile(ops_file);
