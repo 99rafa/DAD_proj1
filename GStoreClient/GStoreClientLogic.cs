@@ -165,17 +165,61 @@ namespace GStoreClient {
             }
         }
 
-        public void processCommands()
+        public bool isEnd(String command){
+            string[] args = command.Split(" ");
+            if (args[0] == "end-repeat")
+                return true;
+            return false;
+        }
+
+        public bool isBegin(String command)
         {
-            foreach (var command in commandQueue)
+            string[] args = command.Split(" ");
+            if (args[0] == "begin-repeat")
+                return true;
+            return false;
+        }
+        public void beginRepeat(int x,int line){
+            List<String> block = new List<String>();
+            int begin = 0;
+            int end = 0;
+
+            int i = 1;
+            int c = 1;
+            foreach(var command in commandQueue)
             {
-                runOperation(command);
-                commandQueue.Dequeue();
+                if(c > line && begin == end)
+                {
+                    command.Replace("$i", i.ToString());
+                    if (isBegin(command))
+                    {
+                        begin++;
+                    }
+                    if (isEnd(command))
+                    {
+                        end++;
+                        break;
+                    }
+                    runOperation(command,line+i);
+                    i++;
+                }
+                c++;
             }
 
         }
 
-        public void runOperation(string op)
+        public void processCommands()
+        {
+            int line = 1;
+            foreach (var command in commandQueue)
+            {
+                runOperation(command,line);
+                line++;
+            }
+            commandQueue.Clear();
+        }
+
+        public void runOperation(string op,int line)
         {
             string[] args = op.Split(" ");
             switch (args[0])
@@ -189,12 +233,17 @@ namespace GStoreClient {
                 case "write":
                     break;
                 case "ListServer":
+                    Console.WriteLine("List Server instruction");
                     break;
                 case "ListGlobal":
+                    Console.WriteLine("ListGlobal instruction");
                     break;
                 case "wait":
+                    Console.WriteLine("Wait instruction");
                     break;
                 case "begin-repeat":
+                    String x = args[1];
+                    beginRepeat(int.Parse(x),line);
                     break;
                 case "end-repeat":
                     break;
