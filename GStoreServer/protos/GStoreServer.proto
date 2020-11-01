@@ -7,7 +7,8 @@ service GStoreServerService {
   rpc WriteValue (WriteValueRequest) returns (WriteValueReply);
   rpc ListServerObjects (ListServerObjectsRequest)  returns (ListServerObjectsReply);
   rpc ListGlobal (ListGlobalRequest) returns (ListGlobalReply);
-
+  rpc ShareWrite (ShareWriteRequest) returns (ShareWriteReply);
+  rpc Lock (LockRequest) returns (LockReply);
 }
 message GStoreClientRegisterRequest {
   string nick = 1;
@@ -62,5 +63,23 @@ message ListGlobalRequest {
 message ListGlobalReply {
 	repeated string partition_ids = 1;
 	repeated string object_id = 2;
+}
+
+message LockRequest {
+}
+
+message LockReply {
+	bool ok = 1;
+}
+
+
+message ShareWriteRequest {
+	string partition_id = 1;
+	string object_id =2;
+	string value = 3;
+}
+
+message ShareWriteReply {
+	bool ok = 1;
 }
 

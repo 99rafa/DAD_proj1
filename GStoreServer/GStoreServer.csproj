@@ -17,7 +17,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <Protobuf Include="protos\GStoreServer.proto" GrpcServices="Server" />
+    <Protobuf Include="protos\GStoreServer.proto" GrpcServices="Both" />
     <Protobuf Include="protos\GStoreClient.proto" GrpcServices="Client" />
     <Protobuf Include="protos\PuppetMasterService.proto" GrpcServices="Both" />
   </ItemGroup>

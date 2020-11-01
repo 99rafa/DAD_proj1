@@ -7,15 +7,25 @@ using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace gStoreServer {
+    public struct ServerStruct {
+        public string url;
+        public GStoreServerService.GStoreServerServiceClient service;
 
+        public ServerStruct(string u, GStoreServerService.GStoreServerServiceClient s) {
+            url = u;
+            service = s;
+        }
+    }
     public class PuppetServerService : PuppetMasterService.PuppetMasterServiceBase {
         public String url;
         //List of servers in each partition, if an entry for a partition exists then this server belongs to that partition
-        public Dictionary<String, List<String>> partitionServers = new Dictionary<String, List<String>>();
-        //List of replica names where this server is the master replica
-        List<String> replicaMaster = new List<String>();
+        public Dictionary<String, List<ServerStruct>> partitionServers = new Dictionary<String, List<ServerStruct>>();
+        
+
         public PuppetServerService(String h) {
             url = h;
         }
@@ -23,21 +33,21 @@ namespace gStoreServer {
         public override Task<PartitionReply> Partition(PartitionRequest request, ServerCallContext context) {
             Console.WriteLine("Received partition request: partition_name: " + request.PartitionName);
             if (!partitionServers.ContainsKey(request.PartitionName)) {
-                partitionServers.Add(request.PartitionName, new List<String>());
+                partitionServers.Add(request.PartitionName, new List<ServerStruct>());
             } else {
                 Console.WriteLine("Received partition creation request that already exists: " + request.PartitionName);
             }
             for(int i = 0; i < request.ServersUrls.Count; i++) {
                 //Add to replicaMaster if this server is the master
-                if (request.ServersUrls[i].Equals(url)) {
-                    if (i == 0) {
-                        Console.WriteLine("\tThis Server: " + url + "  is master of partition: " + request.PartitionName);
-                        replicaMaster.Add(request.PartitionName); 
-                    }
-                } else {//else add server url to the list of servers from this partition
-                    Console.WriteLine("\tAdded server " + request.ServersUrls[i] +  " to local list of partition servers: " + request.PartitionName);
-                    partitionServers[request.PartitionName].Add(request.ServersUrls[i]);
+                if (i==0 && request.ServersUrls[i].Equals(url)) {
+                    Console.WriteLine("\tThis Server: " + url + "  is master of partition: " + request.PartitionName);
                 }
+                // add server url to the list of servers from this partition
+                Console.WriteLine("\tAdded server " + request.ServersUrls[i] +  " to local list of partition servers: " + request.PartitionName);
+                GrpcChannel channel = GrpcChannel.ForAddress("http://" + request.ServersUrls[i]);
+                GStoreServerService.GStoreServerServiceClient service = new GStoreServerService.GStoreServerServiceClient(channel);
+                partitionServers[request.PartitionName].Add(new ServerStruct(request.ServersUrls[i], service));
+                
             }
             return Task.FromResult(new PartitionReply {
                 Ok = true
@@ -54,7 +64,18 @@ namespace gStoreServer {
             {
                 Ok = true
             });
+            
+        }
 
+        public bool serverIsMaster(String partitionName) {
+            if (partitionServers.ContainsKey(partitionName)) {
+                return partitionServers[partitionName][0].url == url;
+            }
+            return false;
+        }
+
+        public List<ServerStruct> getPartitionServers(String partitionName) {
+            return partitionServers[partitionName];
         }
     }
     // GStoreServerService is the namespace defined in the protobuf
@@ -63,8 +84,107 @@ namespace gStoreServer {
         private GrpcChannel channel;
         private Dictionary<string, GStoreClientService.GStoreClientServiceClient> clientMap =
             new Dictionary<string, GStoreClientService.GStoreClientServiceClient>();
+        public PuppetServerService puppetService;
+        private Dictionary<Tuple<String, String>, String> serverObjects = new Dictionary<Tuple<String, String>, String>();
 
-        public ServerService() {
+        private Semaphore _semaphore = new Semaphore(1, 1);
+
+        public ServerService(PuppetServerService p) {
+            puppetService = p;
+        }
+        //public override Task<ReadValueReply> ReadValue(GStoreClientRegisterRequest request, ServerCallContext context) {
+
+        //}
+
+        public async override Task<WriteValueReply> WriteValue(WriteValueRequest request, ServerCallContext context) {
+            //Check if this server is master of partition
+            if (!puppetService.serverIsMaster(request.PartitionId)) {
+                return await Task.FromResult(new WriteValueReply {
+                    Ok = false
+                });
+            }
+            
+
+            _semaphore.WaitOne();
+            try { 
+                serverObjects.Add(new Tuple<string, string>(request.PartitionId, request.ObjectId), request.Value);
+
+                //Sends lock request to every server in partition and wait for all acks
+                List<AsyncUnaryCall<LockReply>> pendingLocks = new List<AsyncUnaryCall<LockReply>>();
+                foreach (ServerStruct server in puppetService.getPartitionServers(request.PartitionId)) {
+                    if(server.url != puppetService.url) {
+                        Console.WriteLine("Sending lock request to " + server.url);
+                        AsyncUnaryCall<LockReply> reply = server.service.LockAsync(new LockRequest { });
+                        pendingLocks.Add(reply);
+                    }
+                    
+                }
+
+                //wait for all LOCK responses
+                await Task.WhenAll(pendingLocks.Select(c => c.ResponseAsync));
+                Console.WriteLine("Lock requests completed");
+                
+                //Share write with all replicas
+                List<AsyncUnaryCall<ShareWriteReply>> pendingTasks = new List<AsyncUnaryCall<ShareWriteReply>>();
+                foreach(ServerStruct server in puppetService.getPartitionServers(request.PartitionId)) {
+                    if (server.url != puppetService.url) {
+                        Console.WriteLine("Sending write share request to " + server.url);
+                        AsyncUnaryCall<ShareWriteReply> reply = server.service.ShareWriteAsync(new ShareWriteRequest {
+                            PartitionId = request.PartitionId,
+                            ObjectId = request.ObjectId,
+                            Value = request.Value
+                        });
+                        pendingTasks.Add(reply);
+                    }
+                }
+
+                //wait for all WRITE SHARE responses
+                await Task.WhenAll(pendingTasks.Select(c => c.ResponseAsync));
+                Console.WriteLine("Sharing writes completed");
+
+            } finally {
+                _semaphore.Release();
+            }
+
+            return await Task.FromResult(new WriteValueReply {
+                Ok = true
+            });
+        }
+
+        public override Task<ShareWriteReply> ShareWrite(ShareWriteRequest request, ServerCallContext context) {
+            Console.WriteLine("Received shared write :   objId: " + request.ObjectId + "    value: " + request.Value);
+            try {
+                //write object
+                serverObjects[new Tuple<string, string>(request.PartitionId, request.ObjectId)] = request.Value; 
+            }
+            finally {
+                //Release lock
+                _semaphore.Release();
+            }
+            Console.WriteLine("Released Lock");
+
+            return Task.FromResult(new ShareWriteReply {
+                Ok = true
+            });
+        }
+
+        public override Task<LockReply> Lock(LockRequest request, ServerCallContext context) {
+            //Lock 
+            Console.WriteLine("Locking server for write ");
+            _semaphore.WaitOne();
+            return Task.FromResult(new LockReply {
+                Ok = true
+            });
+        }
+
+        public override Task<ReadValueReply> ReadValue(ReadValueRequest request, ServerCallContext context) {
+            string value;
+            _semaphore.WaitOne();
+            value = serverObjects[new Tuple<string, string>(request.PartitionId, request.ObjectId)];
+            _semaphore.Release();
+            return Task.FromResult(new ReadValueReply {
+                Value = value
+            });
         }
 
         public override Task<GStoreClientRegisterReply> Register(
@@ -124,7 +244,10 @@ namespace gStoreServer {
             return reply;
         }
     }
-    class Program {
+
+    //Client side of the server
+    //public class ServerService : GStoreServerService.GStoreServerServiceClient {
+        class Program {
         
         public static void Main(string[] args) {
             //const int port = 1001;
@@ -140,10 +263,13 @@ namespace gStoreServer {
             serverPort = new ServerPort(hostname, port, ServerCredentials.Insecure);
             startupMessage = "Insecure GStoreServer server listening on port " + port;
 
+            PuppetServerService puppetService = new PuppetServerService(hostname + ":" + port);
+            ServerService serverService = new ServerService(puppetService);
+
             Server server = new Server
             {
-                Services = { GStoreServerService.BindService(new ServerService()),
-                             PuppetMasterService.BindService(new PuppetServerService(hostname + ":" + port))},
+                Services = { GStoreServerService.BindService(serverService),
+                             PuppetMasterService.BindService(puppetService)},
                 Ports = { serverPort }
             };
 
@@ -154,6 +280,14 @@ namespace gStoreServer {
             //Configuring HTTP for client connections in Register method
             AppContext.SetSwitch(
   "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
+            if(port == 1002){
+                Thread.Sleep(3000);
+                serverService.WriteValue(new WriteValueRequest { PartitionId = "part",
+                                                                 ObjectId = "1",
+                                                                 Value = "1"}, null);
+            }
+
             while (true) ;
         }
     }
