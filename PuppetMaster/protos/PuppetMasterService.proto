@@ -50,9 +50,8 @@ message FreezeReply {
 }
 
 message UnfreezeRequest {
-	bool ok=1;
 }
 
 message UnfreezeReply {
-
+	bool ok=1;
 }

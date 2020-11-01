@@ -102,17 +102,26 @@ namespace PuppetMaster {
         }
 
         public void Crash(String id){
-            servers[id].service.CrashAsync(new CrashRequest { });
+            if (servers.ContainsKey(id))
+                servers[id].service.CrashAsync(new CrashRequest { });
+            else
+                System.Diagnostics.Debug.WriteLine("No such server:",id);
         }
 
         public void Freeze(String id)
         {
-            servers[id].service.FreezeAsync(new FreezeRequest { });
+            if(servers.ContainsKey(id))
+                servers[id].service.FreezeAsync(new FreezeRequest { });
+            else
+                System.Diagnostics.Debug.WriteLine("No such server:", id);
         }
 
         public void Unfreeze(String id)
         {
-            servers[id].service.UnfreezeAsync(new UnfreezeRequest { });
+            if (servers.ContainsKey(id))
+                servers[id].service.UnfreezeAsync(new UnfreezeRequest { });
+            else
+                System.Diagnostics.Debug.WriteLine("No such server:", id);
         }
 
         public String buildServersArguments()
