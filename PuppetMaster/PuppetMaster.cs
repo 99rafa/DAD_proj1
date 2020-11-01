@@ -10,10 +10,10 @@ using System.Reflection;
 
 namespace PuppetMaster {
     struct ServerStruct {
-        public string url;
+        public String url;
         public PuppetMasterService.PuppetMasterServiceClient service;
 
-        public ServerStruct(string u, PuppetMasterService.PuppetMasterServiceClient s) {
+        public ServerStruct(String u, PuppetMasterService.PuppetMasterServiceClient s) {
             url = u;
             service = s;
         }
@@ -83,7 +83,7 @@ namespace PuppetMaster {
         }
         private void addServerToPartition(String partition_id, String server_id)
         {
-            if (!partitions.ContainsKey(partition_id)) partitions.Add(partition_id, new List<string>());
+            if (!partitions.ContainsKey(partition_id)) partitions.Add(partition_id, new List<String>());
             partitions[partition_id].Add(server_id);
         }
 
@@ -101,10 +101,24 @@ namespace PuppetMaster {
 
         }
 
+        public void Crash(String id){
+            servers[id].service.CrashAsync(new CrashRequest { });
+        }
+
+        public void Freeze(String id)
+        {
+            servers[id].service.FreezeAsync(new FreezeRequest { });
+        }
+
+        public void Unfreeze(String id)
+        {
+            servers[id].service.UnfreezeAsync(new UnfreezeRequest { });
+        }
+
         public String buildServersArguments()
         {
             String args = "";
-            foreach (KeyValuePair<string, List<String>> partition in partitions)
+            foreach (KeyValuePair<String, List<String>> partition in partitions)
             {
                 args += " -p " + partition.Key ;
                 foreach (var server in partition.Value)
@@ -116,7 +130,7 @@ namespace PuppetMaster {
         }
 
         public void executeCommand(String c) {
-            string[] args = c.Split(" ");
+            String[] args = c.Split(" ");
             String server_id;
             switch (args[0]) {
                 case "ReplicationFactor":
@@ -127,9 +141,9 @@ namespace PuppetMaster {
                     String min_delay = args[3];
                     String max_delay = args[4];
                     System.Diagnostics.Debug.WriteLine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
-                   
+
                     Process process = new Process();
-                    if(!servers.ContainsKey(server_id))
+                    if (!servers.ContainsKey(server_id))
                         addServerToDict(server_id, url);
                     //Path to server .exe , maybe it should be the "release" version instead of "debug"
                     process.StartInfo.FileName = "..\\..\\..\\..\\GStoreServer\\bin\\Debug\\netcoreapp3.1\\GStoreServer.exe";
@@ -139,11 +153,11 @@ namespace PuppetMaster {
                 case "Partition":
                     int r = int.Parse(args[1]);
                     String part_id = args[2];
-                    List<String> server_urls= new List<String>();
+                    List<String> server_urls = new List<String>();
                     for (int i = 0; i < r; i++) {
-                        server_urls.Add(servers[args[i+3]].url);
-                        
-                    }                    
+                        server_urls.Add(servers[args[i + 3]].url);
+
+                    }
 
                     for (int i = 0; i < r; i++) {
                         server_id = args[i + 3];
@@ -152,9 +166,9 @@ namespace PuppetMaster {
                             PartitionId = part_id,
                             ServersUrls = { server_urls }
                         });
-                       
+
                         System.Diagnostics.Debug.WriteLine("Received answer from partition: " + reply.Ok);
-                        
+
                     }
                     break;
                 case "Client":
@@ -165,25 +179,28 @@ namespace PuppetMaster {
 
                     Process client_process = new Process();
                     if (!clients.ContainsKey(username))
-                        addClientToDict(username,client_url);
+                        addClientToDict(username, client_url);
                     client_process.StartInfo.FileName = "..\\..\\..\\..\\GStoreClient\\bin\\Debug\\netcoreapp3.1\\GStoreClient.exe";
 
                     //-p defines a new partion: first argument after is partition_id, next are partitionMaster, server , server....."
                     String serversArgs = buildServersArguments();
-                    client_process.StartInfo.Arguments = username + " " + client_url + " " + script_file + serversArgs  ;
-                    client_process.Start(); 
+                    client_process.StartInfo.Arguments = username + " " + client_url + " " + script_file + serversArgs;
+                    client_process.Start();
                     break;
                 case "Status":
                     Status();
                     break;
                 case "Crash":
+                    Crash(args[1]);
                     break;
                 case "Freeze":
+                    Freeze(args[1]);
                     break;
                 case "Unfreeze":
+                    Unfreeze(args[1]);
                     break;
                 case "Wait":
-                    string ms = args[1];
+                    String ms = args[1];
                     System.Threading.Thread.Sleep(int.Parse(ms));
                     break;
                 default:
