@@ -103,7 +103,6 @@ namespace GStoreClient {
             });
             if (reply.Value.Equals("N/A"))
             {
-              
 
                 GStoreServerService.GStoreServerServiceClient new_server = serverMap[serverId].service;
 
@@ -121,7 +120,7 @@ namespace GStoreClient {
            string partitionId, string objectId, string value)
         {
 
-            //Assuming the replica master is the first element of the list - 
+            //Assuming the replica master is the first element of the list  
             string serverID = partitionMap[partitionId].ElementAt(0);
 
             GStoreServerService.GStoreServerServiceClient master = serverMap[serverID].service;
@@ -141,7 +140,7 @@ namespace GStoreClient {
             String line;
             if (!File.Exists(@file))
             {
-                Console.WriteLine("Estou aqui");
+                //TODO
             }
             else
             {
@@ -194,7 +193,7 @@ namespace GStoreClient {
                 case "end-repeat":
                     break;
                 default:
-                    Console.WriteLine("Error:Not a recognized operation");
+                    Console.Error.WriteLine("Error:Not a recognized operation");
                     break;
             }
         }
