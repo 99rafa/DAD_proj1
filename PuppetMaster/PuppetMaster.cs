@@ -81,7 +81,7 @@ namespace PuppetMaster {
             PuppetMasterService.PuppetMasterServiceClient clientService = createClientService(url);
             clients.Add(username, createClientService(url));
         }
-        private void addServerToPartition(String partition_id, String server_id)
+        private void AddServerToPartition(String partition_id, String server_id)
         {
             if (!partitions.ContainsKey(partition_id)) partitions.Add(partition_id, new List<string>());
             partitions[partition_id].Add(server_id);
@@ -147,7 +147,7 @@ namespace PuppetMaster {
 
                     for (int i = 0; i < r; i++) {
                         server_id = args[i + 3];
-                        addServerToDict(part_id, server_id);
+                        AddServerToPartition(part_id, server_id);
                         PartitionReply reply = servers[server_id].service.Partition(new PartitionRequest {
                             PartitionId = part_id,
                             ServersUrls = { server_urls }
@@ -167,9 +167,10 @@ namespace PuppetMaster {
                     if (!clients.ContainsKey(username))
                         addClientToDict(username,client_url);
                     client_process.StartInfo.FileName = "..\\..\\..\\..\\GStoreClient\\bin\\Debug\\netcoreapp3.1\\GStoreClient.exe";
-
+                    
                     //-p defines a new partion: first argument after is partition_id, next are partitionMaster, server , server....."
                     String serversArgs = buildServersArguments();
+
                     client_process.StartInfo.Arguments = username + " " + client_url + " " + script_file + serversArgs  ;
                     client_process.Start(); 
                     break;

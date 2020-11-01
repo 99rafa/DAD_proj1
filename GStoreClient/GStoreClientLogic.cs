@@ -47,7 +47,7 @@ namespace GStoreClient {
 
             //partitions come in command line format: -p partition_id partition_master_id partition_master_url other_servers_id other_servers_url -p 
             //maybe it should not be here as it is command line logic
-
+            
             String[] partitions = args.Split("-p ");
             String[] fields;
             String partition_id;
@@ -55,17 +55,16 @@ namespace GStoreClient {
 
             foreach ( var partition in partitions)
             {
-                fields = args.Split("-p ");
+                fields = partition.Split(" ");
   
                 partition_id = fields[0];
-
+                
                 for (int i = 1; i < fields.Length; i+=2)
                 {
                     partitionServers.Add(fields[i]);
                     AddServerToDict(fields[i], fields[i+1]);
                 }
                 AddPartitionToDict(partition_id, partitionServers);
-                
                 
                 Array.Clear(fields, 0, fields.Length);
                 partitionServers.Clear();
@@ -78,6 +77,7 @@ namespace GStoreClient {
 
         private void AddServerToDict(String server_id, String url)
         {
+            Console.WriteLine("server_id: " + server_id + " url: " + url);
             GrpcChannel channel = GrpcChannel.ForAddress("http://" + url);
             GStoreServerService.GStoreServerServiceClient client = new GStoreServerService.GStoreServerServiceClient(channel);
             ClientStruct server = new ClientStruct(url, client);
