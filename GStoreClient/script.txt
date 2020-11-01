@@ -1,5 +1,4 @@
 ﻿begin-repeat 3
-	wait
-	wait
-	wait $i
+begin-repeat 2
+end-repeat
 end-repeat

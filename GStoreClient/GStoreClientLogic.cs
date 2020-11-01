@@ -138,8 +138,9 @@ namespace GStoreClient {
 
         public void readScriptFile(String file)
         {
+            Console.WriteLine("File:" + file);
             String line;
-            if (!File.Exists(@file))
+            if (!File.Exists(file))
             {
                 Console.WriteLine("Estou aqui");
             }
@@ -150,6 +151,7 @@ namespace GStoreClient {
                 while ((line = fileStream.ReadLine()) != null)
                 {
                     addComand(line);
+                    Console.WriteLine("Line:" + line);
                 }
 
                 fileStream.Close();
@@ -174,29 +176,32 @@ namespace GStoreClient {
         }
         public void beginRepeat(int x,int line){
             List<String> block = new List<String>();
-            int begin = 0;
-            int end = 0;
 
-            int i = 1;
-            int c = 1;
-            foreach(var command in commandQueue)
+            for (int i = 1; i <= x; i++)
             {
-                if(c > line && begin == end)
+                int c = 1;
+                int begin = 0;
+                int end = 0;
+
+                foreach (var command in commandQueue)
                 {
-                    command.Replace("$i", i.ToString());
-                    if (isBegin(command))
+                    if (c > line && begin == end)
                     {
-                        begin++;
+                        String rcommand = command.Replace("$i", i.ToString());
+                        Console.WriteLine("BCommand -->" + rcommand);
+                        if (isBegin(command))
+                        {
+                            begin++;
+                        }
+                        if (isEnd(command))
+                        {
+                            end++;
+                            break;
+                        }
+                        runOperation(rcommand, line + i);
                     }
-                    if (isEnd(command))
-                    {
-                        end++;
-                        break;
-                    }
-                    runOperation(command,line+i);
-                    i++;
+                    c++;
                 }
-                c++;
             }
 
         }
@@ -214,8 +219,17 @@ namespace GStoreClient {
 
         public void runOperation(string op,int line)
         {
+            int end = 0, begin = 0;
             String partition_id, object_id;
             string[] args = op.Split(" ");
+            if (args[0] == "begin-repeat"){
+                beginRepeat(int.Parse(args[1]), line);
+                begin++;
+            }
+            if (args[0] == "end-repeat")
+                end++;
+            if (begin > end)
+                return;
             switch (args[0])
             {
                 case "read":
@@ -240,8 +254,6 @@ namespace GStoreClient {
                     Console.WriteLine("Wait instruction");
                     break;
                 case "begin-repeat":
-                    String x = args[1];
-                    beginRepeat(int.Parse(x),line);
                     break;
                 case "end-repeat":
                     break;
