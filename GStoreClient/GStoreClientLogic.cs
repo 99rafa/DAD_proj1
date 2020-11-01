@@ -77,7 +77,7 @@ namespace GStoreClient {
 
         private void AddServerToDict(String server_id, String url)
         {
-            Console.WriteLine("server_id: " + server_id + " url: " + url);
+
             GrpcChannel channel = GrpcChannel.ForAddress("http://" + url);
             GStoreServerService.GStoreServerServiceClient client = new GStoreServerService.GStoreServerServiceClient(channel);
             ClientStruct server = new ClientStruct(url, client);
@@ -94,8 +94,7 @@ namespace GStoreClient {
         public String ReadValue(
            string partitionId, string objectId, string serverId)
         {
-            AppContext.SetSwitch(
-                      "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+          
 
             ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
             {
@@ -104,8 +103,7 @@ namespace GStoreClient {
             });
             if (reply.Value.Equals("N/A"))
             {
-                AppContext.SetSwitch(
-                        "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+              
 
                 GStoreServerService.GStoreServerServiceClient new_server = serverMap[serverId].service;
 
@@ -123,15 +121,12 @@ namespace GStoreClient {
            string partitionId, string objectId, string value)
         {
 
-            AppContext.SetSwitch(
-                    "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-
             //Assuming the replica master is the first element of the list - 
             string serverID = partitionMap[partitionId].ElementAt(0);
 
-            GStoreServerService.GStoreServerServiceClient client = serverMap[serverID].service;
+            GStoreServerService.GStoreServerServiceClient master = serverMap[serverID].service;
 
-            WriteValueReply reply = client.WriteValue(new WriteValueRequest
+            WriteValueReply reply = master.WriteValue(new WriteValueRequest
             {
                 PartitionId = partitionId,
                 ObjectId = objectId,
@@ -144,11 +139,9 @@ namespace GStoreClient {
         public void readScriptFile(String file)
         {
             String line;
-            if (!File.Exists(file))
+            if (!File.Exists(@file))
             {
-
-
-                //TODO
+                Console.WriteLine("Estou aqui");
             }
             else
             {
@@ -221,16 +214,21 @@ namespace GStoreClient {
 
         public void runOperation(string op,int line)
         {
+            String partition_id, object_id;
             string[] args = op.Split(" ");
             switch (args[0])
             {
                 case "read":
-                    String partition_id = args[1];
-                    String object_id = args[2];
+                    partition_id = args[1];
+                    object_id = args[2];
                     String server_id = args[3];
                     ReadValue(partition_id, object_id, server_id);
                     break;
                 case "write":
+                    partition_id = args[1];
+                    object_id = args[2];
+                    String value = args[3];
+                    WriteValue(partition_id, object_id, value);
                     break;
                 case "ListServer":
                     Console.WriteLine("List Server instruction");
@@ -248,6 +246,7 @@ namespace GStoreClient {
                 case "end-repeat":
                     break;
                 default:
+                    Console.WriteLine("Error:Not a recognized operation");
                     break;
             }
         }
