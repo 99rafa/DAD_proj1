@@ -56,6 +56,42 @@ namespace gStoreServer {
             });
 
         }
+
+        public override Task<CrashReply> Crash(CrashRequest request, ServerCallContext context)
+        {
+
+            Console.WriteLine("Crash request received!!");
+
+            return Task.FromResult(new CrashReply
+            {
+                Ok = true
+            });
+
+        }
+
+        public override Task<FreezeReply> Freeze(FreezeRequest request, ServerCallContext context)
+        {
+
+            Console.WriteLine("Freeze request received!!");
+
+            return Task.FromResult(new FreezeReply
+            {
+                Ok = true
+            });
+
+        }
+
+        public override Task<UnfreezeReply> Unfreeze(UnfreezeRequest request, ServerCallContext context)
+        {
+
+            Console.WriteLine("Unfreeze request received!!");
+
+            return Task.FromResult(new UnfreezeReply
+            {
+                Ok = true
+            });
+
+        }
     }
     // GStoreServerService is the namespace defined in the protobuf
     // GStoreServerServiceBase is the generated base implementation of the service
