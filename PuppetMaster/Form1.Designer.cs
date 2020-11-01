@@ -44,7 +44,7 @@
             // 
             // upload_script
             // 
-            this.upload_script.Location = new System.Drawing.Point(21, 198);
+            this.upload_script.Location = new System.Drawing.Point(37, 213);
             this.upload_script.Name = "upload_script";
             this.upload_script.Size = new System.Drawing.Size(104, 30);
             this.upload_script.TabIndex = 1;
@@ -59,7 +59,7 @@
             // 
             // next_button
             // 
-            this.next_button.Location = new System.Drawing.Point(21, 106);
+            this.next_button.Location = new System.Drawing.Point(37, 122);
             this.next_button.Name = "next_button";
             this.next_button.Size = new System.Drawing.Size(104, 30);
             this.next_button.TabIndex = 2;
@@ -69,7 +69,7 @@
             // 
             // run_button
             // 
-            this.run_button.Location = new System.Drawing.Point(160, 106);
+            this.run_button.Location = new System.Drawing.Point(176, 122);
             this.run_button.Name = "run_button";
             this.run_button.Size = new System.Drawing.Size(104, 30);
             this.run_button.TabIndex = 3;
@@ -81,26 +81,28 @@
             // 
             this.scriptBox.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.scriptBox.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.scriptBox.Location = new System.Drawing.Point(318, 43);
+            this.scriptBox.Location = new System.Drawing.Point(318, 49);
             this.scriptBox.Name = "scriptBox";
             this.scriptBox.ReadOnly = true;
-            this.scriptBox.Size = new System.Drawing.Size(214, 230);
+            this.scriptBox.Size = new System.Drawing.Size(281, 255);
             this.scriptBox.TabIndex = 4;
             this.scriptBox.Text = "";
             this.scriptBox.TextChanged += new System.EventHandler(this.scriptBox_TextChanged);
             // 
             // newCommand
             // 
-            this.newCommand.Location = new System.Drawing.Point(428, 282);
+            this.newCommand.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.newCommand.Location = new System.Drawing.Point(428, 313);
             this.newCommand.Multiline = true;
             this.newCommand.Name = "newCommand";
-            this.newCommand.Size = new System.Drawing.Size(104, 30);
+            this.newCommand.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.newCommand.Size = new System.Drawing.Size(171, 30);
             this.newCommand.TabIndex = 5;
             this.newCommand.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
             // new_command_button
             // 
-            this.new_command_button.Location = new System.Drawing.Point(318, 282);
+            this.new_command_button.Location = new System.Drawing.Point(318, 313);
             this.new_command_button.Name = "new_command_button";
             this.new_command_button.Size = new System.Drawing.Size(104, 30);
             this.new_command_button.TabIndex = 6;
@@ -110,7 +112,7 @@
             // 
             // clear
             // 
-            this.clear.Location = new System.Drawing.Point(160, 198);
+            this.clear.Location = new System.Drawing.Point(176, 214);
             this.clear.Name = "clear";
             this.clear.Size = new System.Drawing.Size(104, 30);
             this.clear.TabIndex = 7;
@@ -122,7 +124,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label2.Location = new System.Drawing.Point(363, 7);
+            this.label2.Location = new System.Drawing.Point(393, 7);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(125, 20);
             this.label2.TabIndex = 9;
@@ -133,7 +135,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Times New Roman", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label1.Location = new System.Drawing.Point(57, 25);
+            this.label1.Location = new System.Drawing.Point(69, 26);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(173, 31);
             this.label1.TabIndex = 10;
@@ -143,7 +145,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label3.Location = new System.Drawing.Point(353, 27);
+            this.label3.Location = new System.Drawing.Point(385, 27);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(146, 13);
             this.label3.TabIndex = 11;
@@ -155,7 +157,7 @@
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.label4.ForeColor = System.Drawing.Color.Green;
-            this.label4.Location = new System.Drawing.Point(455, 27);
+            this.label4.Location = new System.Drawing.Point(487, 27);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(37, 13);
             this.label4.TabIndex = 12;
@@ -166,7 +168,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
-            this.ClientSize = new System.Drawing.Size(552, 328);
+            this.ClientSize = new System.Drawing.Size(612, 371);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);

@@ -41,17 +41,43 @@ namespace GStoreClient {
         // dictionary with partitionID as key and list of serverID's
         private Dictionary<string, List<string>> partitionMap = new Dictionary<string, List<string>>();
 
-        public GStoreClient(String user, String host ) {
+        public GStoreClient(String user, String host, String args ) {
             username = user;
             hostname = host;
+
+            //partitions come in command line format: -p partition_id partition_master_id partition_master_url other_servers_id other_servers_url -p 
+            //maybe it should not be here as it is command line logic
+            
+            String[] partitions = args.Split("-p ");
+            String[] fields;
+            String partition_id;
+            List<string> partitionServers = new List<string>();
+
+            foreach ( var partition in partitions)
+            {
+                fields = partition.Split(" ");
+  
+                partition_id = fields[0];
+                
+                for (int i = 1; i < fields.Length; i+=2)
+                {
+                    partitionServers.Add(fields[i]);
+                    AddServerToDict(fields[i], fields[i+1]);
+                }
+                AddPartitionToDict(partition_id, partitionServers);
+                
+                Array.Clear(fields, 0, fields.Length);
+                partitionServers.Clear();
+            }
         }
 
         public bool AddMsgtoGUI(string s) {
             return true;
         }
 
-        private void addServerToDict(String server_id, String url)
+        private void AddServerToDict(String server_id, String url)
         {
+
             GrpcChannel channel = GrpcChannel.ForAddress("http://" + url);
             GStoreServerService.GStoreServerServiceClient client = new GStoreServerService.GStoreServerServiceClient(channel);
             ClientStruct server = new ClientStruct(url, client);
@@ -59,7 +85,7 @@ namespace GStoreClient {
         }
 
 
-        private void  addPartitionToDict(String id, List<string> servers)
+        private void  AddPartitionToDict(String id, List<string> servers)
         {
             partitionMap.Add(id, servers);
         }
@@ -68,8 +94,7 @@ namespace GStoreClient {
         public String ReadValue(
            string partitionId, string objectId, string serverId)
         {
-            AppContext.SetSwitch(
-                      "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+          
 
             ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
             {
@@ -78,8 +103,7 @@ namespace GStoreClient {
             });
             if (reply.Value.Equals("N/A"))
             {
-                AppContext.SetSwitch(
-                        "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+              
 
                 GStoreServerService.GStoreServerServiceClient new_server = serverMap[serverId].service;
 
@@ -97,15 +121,12 @@ namespace GStoreClient {
            string partitionId, string objectId, string value)
         {
 
-            AppContext.SetSwitch(
-                    "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-
             //Assuming the replica master is the first element of the list - 
             string serverID = partitionMap[partitionId].ElementAt(0);
 
-            GStoreServerService.GStoreServerServiceClient client = serverMap[serverID].service;
+            GStoreServerService.GStoreServerServiceClient master = serverMap[serverID].service;
 
-            WriteValueReply reply = client.WriteValue(new WriteValueRequest
+            WriteValueReply reply = master.WriteValue(new WriteValueRequest
             {
                 PartitionId = partitionId,
                 ObjectId = objectId,
@@ -117,12 +138,11 @@ namespace GStoreClient {
 
         public void readScriptFile(String file)
         {
+            Console.WriteLine("File:" + file);
             String line;
             if (!File.Exists(file))
             {
-
-
-                //TODO
+                Console.WriteLine("Estou aqui");
             }
             else
             {
@@ -131,6 +151,7 @@ namespace GStoreClient {
                 while ((line = fileStream.ReadLine()) != null)
                 {
                     addComand(line);
+                    Console.WriteLine("Line:" + line);
                 }
 
                 fileStream.Close();
@@ -139,40 +160,105 @@ namespace GStoreClient {
             }
         }
 
-        public void processCommands()
+        public bool isEnd(String command){
+            string[] args = command.Split(" ");
+            if (args[0] == "end-repeat")
+                return true;
+            return false;
+        }
+
+        public bool isBegin(String command)
         {
-            foreach (var command in commandQueue)
+            string[] args = command.Split(" ");
+            if (args[0] == "begin-repeat")
+                return true;
+            return false;
+        }
+        public void beginRepeat(int x,int line){
+            List<String> block = new List<String>();
+
+            for (int i = 1; i <= x; i++)
             {
-                runOperation(command);
-                commandQueue.Dequeue();
+                int c = 1;
+                int begin = 0;
+                int end = 0;
+
+                foreach (var command in commandQueue)
+                {
+                    if (c > line && begin == end)
+                    {
+                        String rcommand = command.Replace("$i", i.ToString());
+                        Console.WriteLine("BCommand -->" + rcommand);
+                        if (isBegin(command))
+                        {
+                            begin++;
+                        }
+                        if (isEnd(command))
+                        {
+                            end++;
+                            break;
+                        }
+                        runOperation(rcommand, line + i);
+                    }
+                    c++;
+                }
             }
 
         }
 
-        public void runOperation(string op)
+        public void processCommands()
         {
+            int line = 1;
+            foreach (var command in commandQueue)
+            {
+                runOperation(command,line);
+                line++;
+            }
+            commandQueue.Clear();
+        }
+
+        public void runOperation(string op,int line)
+        {
+            int end = 0, begin = 0;
+            String partition_id, object_id;
             string[] args = op.Split(" ");
+            if (args[0] == "begin-repeat"){
+                beginRepeat(int.Parse(args[1]), line);
+                begin++;
+            }
+            if (args[0] == "end-repeat")
+                end++;
+            if (begin > end)
+                return;
             switch (args[0])
             {
                 case "read":
-                    String partition_id = args[1];
-                    String object_id = args[2];
+                    partition_id = args[1];
+                    object_id = args[2];
                     String server_id = args[3];
                     ReadValue(partition_id, object_id, server_id);
                     break;
                 case "write":
+                    partition_id = args[1];
+                    object_id = args[2];
+                    String value = args[3];
+                    WriteValue(partition_id, object_id, value);
                     break;
                 case "ListServer":
+                    Console.WriteLine("List Server instruction");
                     break;
                 case "ListGlobal":
+                    Console.WriteLine("ListGlobal instruction");
                     break;
                 case "wait":
+                    Console.WriteLine("Wait instruction");
                     break;
                 case "begin-repeat":
                     break;
                 case "end-repeat":
                     break;
                 default:
+                    Console.WriteLine("Error:Not a recognized operation");
                     break;
             }
         }

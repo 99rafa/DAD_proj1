@@ -10,10 +10,10 @@ using System.Reflection;
 
 namespace PuppetMaster {
     struct ServerStruct {
-        public string url;
+        public String url;
         public PuppetMasterService.PuppetMasterServiceClient service;
 
-        public ServerStruct(string u, PuppetMasterService.PuppetMasterServiceClient s) {
+        public ServerStruct(String u, PuppetMasterService.PuppetMasterServiceClient s) {
             url = u;
             service = s;
         }
@@ -31,6 +31,9 @@ namespace PuppetMaster {
 
 
         Dictionary<String, ServerStruct> servers = new Dictionary<String, ServerStruct>();
+        // key is partition_id and value is server_id
+        Dictionary<String, List<String>> partitions = new Dictionary<String, List<String>>();
+
         Dictionary<String, PuppetMasterService.PuppetMasterServiceClient> clients = new Dictionary<String, PuppetMasterService.PuppetMasterServiceClient>();
   
         public PuppetMaster() {
@@ -78,6 +81,11 @@ namespace PuppetMaster {
             PuppetMasterService.PuppetMasterServiceClient clientService = createClientService(url);
             clients.Add(username, createClientService(url));
         }
+        private void AddServerToPartition(String partition_id, String server_id)
+        {
+            if (!partitions.ContainsKey(partition_id)) partitions.Add(partition_id, new List<String>());
+            partitions[partition_id].Add(server_id);
+        }
 
         public void Status()
         {
@@ -93,8 +101,45 @@ namespace PuppetMaster {
 
         }
 
+        public void Crash(String id){
+            if (servers.ContainsKey(id))
+                servers[id].service.CrashAsync(new CrashRequest { });
+            else
+                System.Diagnostics.Debug.WriteLine("No such server:",id);
+        }
+
+        public void Freeze(String id)
+        {
+            if(servers.ContainsKey(id))
+                servers[id].service.FreezeAsync(new FreezeRequest { });
+            else
+                System.Diagnostics.Debug.WriteLine("No such server:", id);
+        }
+
+        public void Unfreeze(String id)
+        {
+            if (servers.ContainsKey(id))
+                servers[id].service.UnfreezeAsync(new UnfreezeRequest { });
+            else
+                System.Diagnostics.Debug.WriteLine("No such server:", id);
+        }
+
+        public String buildServersArguments()
+        {
+            String args = "";
+            foreach (KeyValuePair<String, List<String>> partition in partitions)
+            {
+                args += " -p " + partition.Key ;
+                foreach (var server in partition.Value)
+                    args += " " + server + " " + servers[server].url;
+
+            }
+
+            return args;
+        }
+
         public void executeCommand(String c) {
-            string[] args = c.Split(" ");
+            String[] args = c.Split(" ");
             String server_id;
             switch (args[0]) {
                 case "ReplicationFactor":
@@ -105,9 +150,9 @@ namespace PuppetMaster {
                     String min_delay = args[3];
                     String max_delay = args[4];
                     System.Diagnostics.Debug.WriteLine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
-                   
+
                     Process process = new Process();
-                    if(!servers.ContainsKey(server_id))
+                    if (!servers.ContainsKey(server_id))
                         addServerToDict(server_id, url);
                     //Path to server .exe , maybe it should be the "release" version instead of "debug"
                     process.StartInfo.FileName = "..\\..\\..\\..\\GStoreServer\\bin\\Debug\\netcoreapp3.1\\GStoreServer.exe";
@@ -116,21 +161,23 @@ namespace PuppetMaster {
                     break;
                 case "Partition":
                     int r = int.Parse(args[1]);
-                    String part_name = args[2];
-                    List<String> server_urls= new List<String>();
+                    String part_id = args[2];
+                    List<String> server_urls = new List<String>();
                     for (int i = 0; i < r; i++) {
-                        server_urls.Add(servers[args[i+3]].url);
-                    }                    
+                        server_urls.Add(servers[args[i + 3]].url);
+
+                    }
 
                     for (int i = 0; i < r; i++) {
                         server_id = args[i + 3];
+                        AddServerToPartition(part_id, server_id);
                         PartitionReply reply = servers[server_id].service.Partition(new PartitionRequest {
-                            PartitionName = part_name,
+                            PartitionId = part_id,
                             ServersUrls = { server_urls }
                         });
-                       
+
                         System.Diagnostics.Debug.WriteLine("Received answer from partition: " + reply.Ok);
-                        
+
                     }
                     break;
                 case "Client":
@@ -141,22 +188,30 @@ namespace PuppetMaster {
 
                     Process client_process = new Process();
                     if (!clients.ContainsKey(username))
-                        addClientToDict(username,client_url);
+                        addClientToDict(username, client_url);
                     client_process.StartInfo.FileName = "..\\..\\..\\..\\GStoreClient\\bin\\Debug\\netcoreapp3.1\\GStoreClient.exe";
-                    client_process.StartInfo.Arguments = username + " " + client_url + " " + script_file ;
+                    
+                    //-p defines a new partion: first argument after is partition_id, next are partitionMaster, server , server....."
+                    String serversArgs = buildServersArguments();
+
+                    client_process.StartInfo.Arguments = username + " " + client_url + " " + script_file + serversArgs  ;
                     client_process.Start(); 
+
                     break;
                 case "Status":
                     Status();
                     break;
                 case "Crash":
+                    Crash(args[1]);
                     break;
                 case "Freeze":
+                    Freeze(args[1]);
                     break;
                 case "Unfreeze":
+                    Unfreeze(args[1]);
                     break;
                 case "Wait":
-                    string ms = args[1];
+                    String ms = args[1];
                     System.Threading.Thread.Sleep(int.Parse(ms));
                     break;
                 default:

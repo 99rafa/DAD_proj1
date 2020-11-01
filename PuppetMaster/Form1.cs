@@ -45,7 +45,7 @@ namespace PuppetMaster
                     string text = File.ReadAllText(file);
                     size = text.Length;
                     scriptBox.Text += text;
-                    highlight_line(pos);
+                    highlight_command(pos);
                     uploadScriptCommands();
                 }
                 catch (IOException)
@@ -66,8 +66,8 @@ namespace PuppetMaster
             if (pos < scriptBox.Lines.Length - 1)
             {
                 puppetMaster.runNextCommand();
-                highlight_line(++pos);
-                un_highlight_previous_line(pos);
+                highlight_command(++pos);
+                un_highlight_previous_command(pos);
             }
         }
 
@@ -89,7 +89,7 @@ namespace PuppetMaster
                     scriptBox.Text += "\r\n";
             scriptBox.Text += newCommand.Text + "\r\n";
             newCommand.Text = "";
-            highlight_line(pos);
+            highlight_command(pos);
         }
 
         private void richTextBox1_TextChanged(object sender, EventArgs e)
@@ -97,7 +97,7 @@ namespace PuppetMaster
 
         }
 
-        private void highlight_line(int position)
+        private void highlight_command(int position)
         {
             string currentCommand = scriptBox.Lines[position];
             scriptBox.Select(scriptBox.GetFirstCharIndexFromLine(position), currentCommand.Length);
@@ -106,7 +106,7 @@ namespace PuppetMaster
             scriptBox.SelectionFont = new Font(scriptBox.Font, FontStyle.Bold);
             
         }
-        private void un_highlight_previous_line(int position)
+        private void un_highlight_previous_command(int position)
         {
             string currentCommand = scriptBox.Lines[position - 1];
             scriptBox.Select(scriptBox.GetFirstCharIndexFromLine(position - 1), currentCommand.Length);
@@ -129,7 +129,7 @@ namespace PuppetMaster
         private void cont_button_Click(object sender, EventArgs e)
         {
             puppetMaster.runCommands();
-            un_highlight_previous_line(++pos);
+            un_highlight_previous_command(++pos);
             pos = scriptBox.Lines.Length - 1;
         }
 
