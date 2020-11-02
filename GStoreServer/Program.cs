@@ -133,6 +133,7 @@ namespace gStoreServer {
         //}
 
         public async override Task<WriteValueReply> WriteValue(WriteValueRequest request, ServerCallContext context) {
+            Console.WriteLine("Received write request for partition " + request.PartitionId + " on objet " + request.ObjectId + " with value " + request.Value);
             //Check if this server is master of partition
             if (!puppetService.serverIsMaster(request.PartitionId)) {
                 return await Task.FromResult(new WriteValueReply {
@@ -149,7 +150,7 @@ namespace gStoreServer {
                 List<AsyncUnaryCall<LockReply>> pendingLocks = new List<AsyncUnaryCall<LockReply>>();
                 foreach (ServerStruct server in puppetService.getPartitionServers(request.PartitionId)) {
                     if(server.url != puppetService.url) {
-                        Console.WriteLine("Sending lock request to " + server.url);
+                        Console.WriteLine("\t\tSending lock request to " + server.url);
                         AsyncUnaryCall<LockReply> reply = server.service.LockAsync(new LockRequest { });
                         pendingLocks.Add(reply);
                     }
@@ -158,13 +159,13 @@ namespace gStoreServer {
 
                 //wait for all LOCK responses
                 await Task.WhenAll(pendingLocks.Select(c => c.ResponseAsync));
-                Console.WriteLine("Lock requests completed");
+                Console.WriteLine("\tLock requests completed");
                 
                 //Share write with all replicas
                 List<AsyncUnaryCall<ShareWriteReply>> pendingTasks = new List<AsyncUnaryCall<ShareWriteReply>>();
                 foreach(ServerStruct server in puppetService.getPartitionServers(request.PartitionId)) {
                     if (server.url != puppetService.url) {
-                        Console.WriteLine("Sending write share request to " + server.url);
+                        Console.WriteLine("\t\tSending write share request to " + server.url);
                         AsyncUnaryCall<ShareWriteReply> reply = server.service.ShareWriteAsync(new ShareWriteRequest {
                             PartitionId = request.PartitionId,
                             ObjectId = request.ObjectId,
@@ -176,8 +177,8 @@ namespace gStoreServer {
 
                 //wait for all WRITE SHARE responses
                 await Task.WhenAll(pendingTasks.Select(c => c.ResponseAsync));
-                Console.WriteLine("Sharing writes completed");
-
+                Console.WriteLine("\tSharing writes completed");
+                Console.WriteLine("Write in partition completed");
             } finally {
                 _semaphore.Release();
             }
@@ -214,6 +215,7 @@ namespace gStoreServer {
         }
 
         public override Task<ReadValueReply> ReadValue(ReadValueRequest request, ServerCallContext context) {
+            Console.WriteLine("Received Read request ");
             string value;
             _semaphore.WaitOne();
             value = serverObjects[new Tuple<string, string>(request.PartitionId, request.ObjectId)];
@@ -316,14 +318,6 @@ namespace gStoreServer {
             //Configuring HTTP for client connections in Register method
             AppContext.SetSwitch(
   "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-
-            if(port == 1002){
-                Thread.Sleep(3000);
-                serverService.WriteValue(new WriteValueRequest { PartitionId = "part",
-                                                                 ObjectId = "1",
-                                                                 Value = "1"}, null);
-            }
-
             while (true) ;
         }
     }

@@ -113,7 +113,7 @@ namespace GStoreClient {
         public bool WriteValue(
            string partitionId, string objectId, string value)
         {
-
+            Console.WriteLine("Sending Write to partition " + partitionId + " on object " + objectId + " with value " + value);
             //Assuming the replica master is the first element of the list  
             string serverID = partitionMap[partitionId].First();
 
@@ -230,7 +230,8 @@ namespace GStoreClient {
                     partition_id = args[1];
                     object_id = args[2];
                     String server_id = args[3];
-                    ReadValue(partition_id, object_id, server_id);
+                    String read_value = ReadValue(partition_id, object_id, server_id);
+                    Console.WriteLine("Read value " + read_value + " on partition " + partition_id + " on object " + object_id);
                     break;
                 case "write":
                     partition_id = args[1];
