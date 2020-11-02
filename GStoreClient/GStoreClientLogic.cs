@@ -47,27 +47,13 @@ namespace GStoreClient {
 
             //partitions come in command line format: -p partition_id partition_master_id partition_master_url other_servers_id other_servers_url -p 
             //maybe it should not be here as it is command line logic
-            
-            String[] partitions = args.Split("-p ");
-            String[] fields;
-            String partition_id;
-            List<string> partitionServers = new List<string>();
-
+  
+            String[] partitions = args.Split("-p ", StringSplitOptions.RemoveEmptyEntries);
+  
             foreach ( var partition in partitions)
             {
-                fields = partition.Split(" ");
-  
-                partition_id = fields[0];
-                
-                for (int i = 1; i < fields.Length; i+=2)
-                {
-                    partitionServers.Add(fields[i]);
-                    AddServerToDict(fields[i], fields[i+1]);
-                }
-                AddPartitionToDict(partition_id, partitionServers);
-                
-                Array.Clear(fields, 0, fields.Length);
-                partitionServers.Clear();
+
+                AddPartitionToDict(partition);
             }
         }
 
@@ -84,10 +70,19 @@ namespace GStoreClient {
             serverMap.Add(server_id, server);
         }
 
-
-        private void  AddPartitionToDict(String id, List<string> servers)
+        // receives arguments in the format: partition_master_id partition_master_url server2_id server2_url ....
+        private void  AddPartitionToDict(String servers)
         {
-            partitionMap.Add(id, servers);
+            String [] fields = servers.Split(" ");
+
+            String partition_id = fields[0];
+            partitionMap.Add(partition_id, new List<string>());
+            for (int i = 1; i < fields.Length; i += 2)
+            {
+                partitionMap[partition_id].Add(fields[i]);
+                AddServerToDict(fields[i], fields[i + 1]);
+            }            
+
         }
 
 
@@ -121,7 +116,7 @@ namespace GStoreClient {
         {
 
             //Assuming the replica master is the first element of the list  
-            string serverID = partitionMap[partitionId].ElementAt(0);
+            string serverID = partitionMap[partitionId].First();
 
             GStoreServerService.GStoreServerServiceClient master = serverMap[serverID].service;
 
@@ -150,7 +145,6 @@ namespace GStoreClient {
                 while ((line = fileStream.ReadLine()) != null)
                 {
                     addComand(line);
-                    Console.WriteLine("Line:" + line);
                 }
 
                 fileStream.Close();
@@ -187,7 +181,7 @@ namespace GStoreClient {
                     if (c > line && begin == end)
                     {
                         String rcommand = command.Replace("$i", i.ToString());
-                        Console.WriteLine("BCommand -->" + rcommand);
+
                         if (isBegin(command))
                         {
                             begin++;
@@ -221,6 +215,7 @@ namespace GStoreClient {
             int end = 0, begin = 0;
             String partition_id, object_id;
             string[] args = op.Split(" ");
+
             if (args[0] == "begin-repeat"){
                 beginRepeat(int.Parse(args[1]), line);
                 begin++;
