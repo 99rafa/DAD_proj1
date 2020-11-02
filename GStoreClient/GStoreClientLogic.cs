@@ -180,25 +180,28 @@ namespace GStoreClient {
             for (int i = 1; i <= x; i++)
             {
                 int c = 1;
+                int rc = 1;
                 int begin = 0;
                 int end = 0;
 
                 foreach (var command in commandQueue)
                 {
+                    if (c > line && isEnd(command))
+                    {
+                        end++;
+                        rc++;
+                        if (end>begin)
+                            break;
+                    }
                     if (c > line && begin == end)
                     {
                         String rcommand = command.Replace("$i", i.ToString());
-                        Console.WriteLine("BCommand -->" + rcommand);
                         if (isBegin(command))
                         {
                             begin++;
                         }
-                        if (isEnd(command))
-                        {
-                            end++;
-                            break;
-                        }
-                        runOperation(rcommand, line + i);
+                        runOperation(rcommand, line + rc);
+                        rc++;
                     }
                     c++;
                 }
@@ -206,12 +209,25 @@ namespace GStoreClient {
 
         }
 
+
+        public int updateContext(String command)
+        {
+            if (isEnd(command))
+                return -1;
+            else if (isBegin(command))
+                return 1;
+            else
+                return 0;
+        }
         public void processCommands()
         {
             int line = 1;
+            int context = 0;
             foreach (var command in commandQueue)
             {
-                runOperation(command,line);
+                if(context == 0)
+                    runOperation(command,line);
+                context += updateContext(command);
                 line++;
             }
             commandQueue.Clear();
@@ -219,17 +235,8 @@ namespace GStoreClient {
 
         public void runOperation(string op,int line)
         {
-            int end = 0, begin = 0;
             String partition_id, object_id;
             string[] args = op.Split(" ");
-            if (args[0] == "begin-repeat"){
-                beginRepeat(int.Parse(args[1]), line);
-                begin++;
-            }
-            if (args[0] == "end-repeat")
-                end++;
-            if (begin > end)
-                return;
             switch (args[0])
             {
                 case "read":
@@ -254,6 +261,7 @@ namespace GStoreClient {
                     Console.WriteLine("Wait instruction");
                     break;
                 case "begin-repeat":
+                    beginRepeat(int.Parse(args[1]), line);
                     break;
                 case "end-repeat":
                     break;
