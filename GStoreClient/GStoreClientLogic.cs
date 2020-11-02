@@ -89,8 +89,7 @@ namespace GStoreClient {
         public String ReadValue(
            string partitionId, string objectId, string serverId)
         {
-          
-
+            if (current_server == null) current_server = serverMap[serverId].service;
             ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
             {
                 PartitionId = partitionId,
@@ -119,6 +118,7 @@ namespace GStoreClient {
             string serverID = partitionMap[partitionId].First();
 
             GStoreServerService.GStoreServerServiceClient master = serverMap[serverID].service;
+            current_server = master;
 
             WriteValueReply reply = master.WriteValue(new WriteValueRequest
             {
