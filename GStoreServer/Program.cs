@@ -218,7 +218,12 @@ namespace gStoreServer {
             Console.WriteLine("Received Read request ");
             string value;
             _semaphore.WaitOne();
-            value = serverObjects[new Tuple<string, string>(request.PartitionId, request.ObjectId)];
+            Tuple<string, string> key = new Tuple<string, string>(request.PartitionId, request.ObjectId);
+            if (serverObjects.ContainsKey(key)){
+                value = serverObjects[key];
+            } else {
+                value = "N/A";
+            }
             _semaphore.Release();
             return Task.FromResult(new ReadValueReply {
                 Value = value
