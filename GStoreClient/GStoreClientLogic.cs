@@ -87,23 +87,27 @@ namespace GStoreClient {
 
 
         public String ReadValue(
-           string partitionId, string objectId, string serverId)
+           string partition_id, string object_id, string server_id)
         {
-            if (current_server == null) current_server = serverMap[serverId].service;
+            if (current_server == null) current_server = serverMap[server_id].service;
+
+            Console.WriteLine("Connecting to current server...");
+
             ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
             {
-                PartitionId = partitionId,
-                ObjectId = objectId,
+                PartitionId = partition_id,
+                ObjectId = object_id,
             });
             if (reply.Value.Equals("N/A"))
             {
-
-                GStoreServerService.GStoreServerServiceClient new_server = serverMap[serverId].service;
+                Console.WriteLine("Unable to fetch object " + object_id + " from current server");
+                Console.WriteLine("Trying server " + server_id + "...");
+                GStoreServerService.GStoreServerServiceClient new_server = serverMap[server_id].service;
 
                 reply = new_server.ReadValue(new ReadValueRequest
                 {
-                    PartitionId = partitionId,
-                    ObjectId = objectId,
+                    PartitionId = partition_id,
+                    ObjectId = object_id,
                 });
                 current_server = new_server;
             }
@@ -111,23 +115,43 @@ namespace GStoreClient {
         }
 
         public bool WriteValue(
-           string partitionId, string objectId, string value)
+           string partition_id, string object_id, string value)
         {
-            Console.WriteLine("Sending Write to partition " + partitionId + " on object " + objectId + " with value " + value);
-            //Assuming the replica master is the first element of the list  
-            string serverID = partitionMap[partitionId].First();
+           //Assuming the replica master is the first element of the list  
+            string server_id = partitionMap[partition_id].First();
 
-            GStoreServerService.GStoreServerServiceClient master = serverMap[serverID].service;
+            GStoreServerService.GStoreServerServiceClient master = serverMap[server_id].service;
             current_server = master;
+
+            Console.WriteLine("Connecting to master replica with server_id " + server_id + " of partition " + partition_id);
+            Console.WriteLine("Sending Write to partition " + partition_id + " on object " + object_id + " with value " + value);
 
             WriteValueReply reply = master.WriteValue(new WriteValueRequest
             {
-                PartitionId = partitionId,
-                ObjectId = objectId,
+                PartitionId = partition_id,
+                ObjectId = object_id,
                 Value = value
             });
 
             return reply.Ok;
+        }
+
+        public Dictionary<Tuple<String, String>, Tuple<String,bool>> ListServer( String server_id)
+        {
+            GStoreServerService.GStoreServerServiceClient server = serverMap[server_id].service;
+            current_server = server;
+
+            ListServerObjectsReply reply = server.ListServerObjects(new ListServerObjectsRequest { });
+
+            Dictionary<Tuple<String, String>, Tuple<String, bool>> dictReply = new Dictionary<Tuple<String, String>, Tuple<String, bool>>();
+            // format: <part_id, obj_id>, <value, isMaster>
+
+            foreach ( var obj in reply.Objects) {
+                dictReply[new Tuple<String, String>(obj.PartitionId, obj.ObjectId)] =
+                    new Tuple<String, bool>(obj.Value, obj.IsMaster);
+            }
+
+            return dictReply;
         }
 
         public void readScriptFile(String file)
@@ -228,14 +252,14 @@ namespace GStoreClient {
 
         public void runOperation(string op,int line)
         {
-            String partition_id, object_id;
+            String partition_id, object_id, server_id;
             string[] args = op.Split(" ");
             switch (args[0])
             {
                 case "read":
                     partition_id = args[1];
                     object_id = args[2];
-                    String server_id = args[3];
+                    server_id = args[3];
                     String read_value = ReadValue(partition_id, object_id, server_id);
                     Console.WriteLine("Read value " + read_value + " on partition " + partition_id + " on object " + object_id);
                     break;
@@ -245,10 +269,12 @@ namespace GStoreClient {
                     String value = args[3];
                     WriteValue(partition_id, object_id, value);
                     break;
-                case "ListServer":
-                    Console.WriteLine("List Server instruction");
+                case "listServer":
+                    server_id = args[1];
+                    Console.WriteLine("Reading all objects from server " + server_id);
+                    ListServer(server_id);
                     break;
-                case "ListGlobal":
+                case "listGlobal":
                     Console.WriteLine("ListGlobal instruction");
                     break;
                 case "wait":

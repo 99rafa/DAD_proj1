@@ -49,11 +49,18 @@ message WriteValueReply {
 }
 
 message ListServerObjectsRequest {
-	string server_id = 1;
+
 }
 
 message ListServerObjectsReply {
-	repeated string objects = 1;
+	repeated Object objects = 1;
+}
+
+message Object {
+	string partition_id = 1;
+	string object_id = 2;
+	string value = 3;
+	bool isMaster = 4;
 }
 
 message ListGlobalRequest {
