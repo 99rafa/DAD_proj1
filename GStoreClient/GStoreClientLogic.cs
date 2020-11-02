@@ -47,27 +47,13 @@ namespace GStoreClient {
 
             //partitions come in command line format: -p partition_id partition_master_id partition_master_url other_servers_id other_servers_url -p 
             //maybe it should not be here as it is command line logic
-            
-            String[] partitions = args.Split("-p ");
-            String[] fields;
-            String partition_id;
-            List<string> partitionServers = new List<string>();
-
+  
+            String[] partitions = args.Split("-p ", StringSplitOptions.RemoveEmptyEntries);
+  
             foreach ( var partition in partitions)
             {
-                fields = partition.Split(" ");
-  
-                partition_id = fields[0];
-                
-                for (int i = 1; i < fields.Length; i+=2)
-                {
-                    partitionServers.Add(fields[i]);
-                    AddServerToDict(fields[i], fields[i+1]);
-                }
-                AddPartitionToDict(partition_id, partitionServers);
-                
-                Array.Clear(fields, 0, fields.Length);
-                partitionServers.Clear();
+
+                AddPartitionToDict(partition);
             }
         }
 
@@ -84,18 +70,26 @@ namespace GStoreClient {
             serverMap.Add(server_id, server);
         }
 
-
-        private void  AddPartitionToDict(String id, List<string> servers)
+        // receives arguments in the format: partition_master_id partition_master_url server2_id server2_url ....
+        private void  AddPartitionToDict(String servers)
         {
-            partitionMap.Add(id, servers);
+            String [] fields = servers.Split(" ");
+
+            String partition_id = fields[0];
+            partitionMap.Add(partition_id, new List<string>());
+            for (int i = 1; i < fields.Length; i += 2)
+            {
+                partitionMap[partition_id].Add(fields[i]);
+                AddServerToDict(fields[i], fields[i + 1]);
+            }            
+
         }
 
 
         public String ReadValue(
            string partitionId, string objectId, string serverId)
         {
-          
-
+            if (current_server == null) current_server = serverMap[serverId].service;
             ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
             {
                 PartitionId = partitionId,
@@ -103,7 +97,6 @@ namespace GStoreClient {
             });
             if (reply.Value.Equals("N/A"))
             {
-              
 
                 GStoreServerService.GStoreServerServiceClient new_server = serverMap[serverId].service;
 
@@ -120,11 +113,12 @@ namespace GStoreClient {
         public bool WriteValue(
            string partitionId, string objectId, string value)
         {
-
-            //Assuming the replica master is the first element of the list - 
-            string serverID = partitionMap[partitionId].ElementAt(0);
+            Console.WriteLine("Sending Write to partition " + partitionId + " on object " + objectId + " with value " + value);
+            //Assuming the replica master is the first element of the list  
+            string serverID = partitionMap[partitionId].First();
 
             GStoreServerService.GStoreServerServiceClient master = serverMap[serverID].service;
+            current_server = master;
 
             WriteValueReply reply = master.WriteValue(new WriteValueRequest
             {
@@ -142,7 +136,7 @@ namespace GStoreClient {
             String line;
             if (!File.Exists(file))
             {
-                Console.WriteLine("Estou aqui");
+                //TODO
             }
             else
             {
@@ -151,7 +145,6 @@ namespace GStoreClient {
                 while ((line = fileStream.ReadLine()) != null)
                 {
                     addComand(line);
-                    Console.WriteLine("Line:" + line);
                 }
 
                 fileStream.Close();
@@ -243,7 +236,8 @@ namespace GStoreClient {
                     partition_id = args[1];
                     object_id = args[2];
                     String server_id = args[3];
-                    ReadValue(partition_id, object_id, server_id);
+                    String read_value = ReadValue(partition_id, object_id, server_id);
+                    Console.WriteLine("Read value " + read_value + " on partition " + partition_id + " on object " + object_id);
                     break;
                 case "write":
                     partition_id = args[1];
@@ -266,7 +260,7 @@ namespace GStoreClient {
                 case "end-repeat":
                     break;
                 default:
-                    Console.WriteLine("Error:Not a recognized operation");
+                    Console.Error.WriteLine("Error:Not a recognized operation");
                     break;
             }
         }
