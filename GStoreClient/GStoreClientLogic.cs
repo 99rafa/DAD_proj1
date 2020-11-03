@@ -194,33 +194,39 @@ namespace GStoreClient {
         public void beginRepeat(int x,int line){
             List<String> block = new List<String>();
 
+            //Repeating x times
             for (int i = 1; i <= x; i++)
             {
-                int c = 1;
-                int rc = 1;
-                int begin = 0;
-                int end = 0;
+                int current_line = 1;
+                int executed_commands = 1;
+                int context = 0;
 
+                //
                 foreach (var command in commandQueue)
                 {
-                    if (c > line && isEnd(command))
+                    if (current_line > line && isEnd(command))
                     {
-                        end++;
-                        rc++;
-                        if (end>begin)
+                        //Reached current context end-repeat
+                        if (context == 0)
                             break;
+
+                        context--;  //Change context
+                        executed_commands++;
                     }
-                    if (c > line && begin == end)
+                    //Only exec commands that come after called begin and on current context
+                    if (current_line > line && context == 0)
                     {
+                        //$i --> current iteration
                         String rcommand = command.Replace("$i", i.ToString());
+
+                        //Change context
                         if (isBegin(command))
-                        {
-                            begin++;
-                        }
-                        runOperation(rcommand, line + rc);
-                        rc++;
+                            context++;
+
+                        runOperation(rcommand, line + executed_commands);
+                        executed_commands++;
                     }
-                    c++;
+                    current_line++;
                 }
             }
 
