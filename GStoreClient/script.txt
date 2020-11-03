@@ -1,10 +1,9 @@
 ﻿begin-repeat 3
 wait $i
-begin-repeat 2
+end-repeat
+begin-repeat 1
 wait $i
 end-repeat
-begin-repeat 2
-wait $i
-end-repeat
+begin-repeat 4
 wait $i
 end-repeat
