@@ -132,7 +132,6 @@ namespace GStoreClient {
                 ObjectId = object_id,
                 Value = value
             });
-
             return reply.Ok;
         }
 
@@ -278,7 +277,9 @@ namespace GStoreClient {
                     Console.WriteLine("ListGlobal instruction");
                     break;
                 case "wait":
-                    Console.WriteLine("Wait instruction");
+                    String ms = args[1];
+                    Console.WriteLine("Delaying execution for " + ms + " milliseconds");
+                    System.Threading.Thread.Sleep(int.Parse(ms));
                     break;
                 case "begin-repeat":
                     beginRepeat(int.Parse(args[1]), line);

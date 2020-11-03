@@ -52,6 +52,7 @@ namespace GStoreClient
 
             client = new GStoreClient(username, hostname, partitions);
             client.readScriptFile(ops_file);
+
             while (true);
         }
     }
