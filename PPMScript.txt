@@ -1,3 +1,6 @@
 Server 1 localhost:8080 0 0
-Crash 1
-Crash 1
+Partition 1 1 1
+Client afonso localhost:8082 C:\Users\User\Documents\DAD\ClientScript.txt
+Freeze 1
+Wait 2000
+Unfreeze 1
