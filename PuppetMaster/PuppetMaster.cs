@@ -56,6 +56,11 @@ namespace PuppetMaster {
             System.Diagnostics.Debug.WriteLine("added command:", command);
         }
 
+        public void clearCommands()
+        {
+            commandQueue.Clear();
+        }
+
         public void runCommands() {
             foreach(var command in commandQueue) {
                 executeCommand(command);
@@ -65,7 +70,8 @@ namespace PuppetMaster {
         }
 
         public void runNextCommand(){
-            executeCommand(commandQueue.Dequeue());
+            if (commandQueue.Count != 0)
+                executeCommand(commandQueue.Dequeue());
         }
 
         private PuppetMasterService.PuppetMasterServiceClient createClientService(String url) {
@@ -171,6 +177,7 @@ namespace PuppetMaster {
                     for (int i = 0; i < r; i++) {
                         server_id = args[i + 3];
                         AddServerToPartition(part_id, server_id);
+                        
                         //AsyncUnaryCall<PartitionReply> reply = servers[server_id].service.PartitionAsync... Melhora o tempo a mil
                         PartitionReply reply = servers[server_id].service.Partition(new PartitionRequest {
                             PartitionId = part_id,

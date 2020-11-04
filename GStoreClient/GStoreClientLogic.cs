@@ -46,7 +46,7 @@ namespace GStoreClient {
             //maybe it should not be here as it is command line logic
   
             String[] partitions = args.Split("-p ", StringSplitOptions.RemoveEmptyEntries);
-            Console.WriteLine(args);
+
             foreach ( var partition in partitions)
             {
                 AddPartitionToDict(partition);
@@ -174,11 +174,11 @@ namespace GStoreClient {
 
         public void readScriptFile(String file)
         {
-            Console.WriteLine("File:" + file);
+
             String line;
             if (!File.Exists(file))
             {
-                //TODO
+                Console.Error.WriteLine("Error: No file found");
             }
             else
             {

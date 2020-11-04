@@ -63,10 +63,10 @@ namespace PuppetMaster
         private void next_button_Click(object sender, EventArgs e)
         {
 
-            if (pos < scriptBox.Lines.Length - 1)
+            if (pos < scriptBox.Lines.Length)
             {
                 puppetMaster.runNextCommand();
-                highlight_command(++pos);
+                if (pos < scriptBox.Lines.Length - 1) highlight_command(++pos);
                 un_highlight_previous_command(pos);
             }
         }
@@ -108,6 +108,7 @@ namespace PuppetMaster
         }
         private void un_highlight_previous_command(int position)
         {
+            if (position == 0) return;
             string currentCommand = scriptBox.Lines[position - 1];
             scriptBox.Select(scriptBox.GetFirstCharIndexFromLine(position - 1), currentCommand.Length);
             scriptBox.SelectionColor = Color.Black;
@@ -119,6 +120,7 @@ namespace PuppetMaster
         {
             scriptBox.Text = "";
             pos = 0;
+            puppetMaster.clearCommands();
         }
 
         private void label2_Click(object sender, EventArgs e)
@@ -128,10 +130,13 @@ namespace PuppetMaster
 
         private void cont_button_Click(object sender, EventArgs e)
         {
-            puppetMaster.runCommands();
-            un_highlight_previous_command(++pos);
-            pos = scriptBox.Lines.Length - 1;
-        }
+            if (pos < scriptBox.Lines.Length )
+            {
+                puppetMaster.runCommands();
+                un_highlight_previous_command(++pos);
+                pos = scriptBox.Lines.Length - 1;
+            }
+            }
 
         private void label3_Click(object sender, EventArgs e)
         {

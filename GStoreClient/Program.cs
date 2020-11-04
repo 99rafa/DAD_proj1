@@ -41,11 +41,11 @@ namespace GStoreClient
             String username = args[0];
             String ops_file = args[2];
             
-            String hostname = Regex.Matches(args[1], "[A-Za-z]+[^:]")[0].ToString();
+            String hostname = Regex.Matches(args[1], "[A-Za-z]+[^:]")[1].ToString();
             int port = int.Parse(Regex.Matches(args[1], "[^:]*[0-9]+")[0].ToString());
-
+            
             String partitions = "";
-
+           
             partitions += args[3];
             for (int i = 4; i < args.Length; i++)
             {

@@ -9,12 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GStoreServer", "GStoreServe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GStoreClient", "GStoreClient\GStoreClient.csproj", "{47EC9BE7-582B-4EC5-8A28-1E3A6D3BA687}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts_for_testing", "scripts_for_testing", "{704E3838-B8BC-4988-B378-0C4728CE1716}"
-	ProjectSection(SolutionItems) = preProject
-		ClientScript.txt = ClientScript.txt
-		PPMScript.txt = PPMScript.txt
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

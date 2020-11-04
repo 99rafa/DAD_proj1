@@ -147,7 +147,9 @@ namespace gStoreServer {
         private int RandomDelay()
         {
             Random r = new Random();
-            return r.Next(min_delay, max_delay);
+            int delay = r.Next(min_delay, max_delay);
+            Console.WriteLine("Adding a " + delay + " ms delay to tht request");
+            return delay;
         }
         public override Task<ListGlobalReply> ListGlobal(ListGlobalRequest request, ServerCallContext context)
         {
@@ -315,14 +317,14 @@ namespace gStoreServer {
             string startupMessage;
             ServerPort serverPort;
 
-            String hostname = Regex.Matches(args[1], "[A-Za-z]+[^:]")[0].ToString();
+            String hostname = Regex.Matches(args[1], "[A-Za-z]+[^:]")[1].ToString();
             int port = int.Parse(Regex.Matches(args[1], "[^:]*[0-9]+")[0].ToString());
             int min_delay = int.Parse(args[2]);
             int max_delay = int.Parse(args[3]);
 
             serverPort = new ServerPort(hostname, port, ServerCredentials.Insecure);
             startupMessage = "Insecure GStoreServer server listening on port " + port;
-
+            Console.WriteLine(hostname);
             PuppetServerService puppetService = new PuppetServerService(hostname + ":" + port);
             ServerService serverService = new ServerService(puppetService,min_delay,max_delay);
 
@@ -337,7 +339,7 @@ namespace gStoreServer {
 
             Console.WriteLine(startupMessage);
             Console.WriteLine("Server_id: " + args[0] + "\t hostname: " + hostname + "\t min_delay: "+min_delay+"\t max_delay: "+ max_delay);
-            //Configuring HTTP for client connections in Register method
+            //Configuring HTTP 
             AppContext.SetSwitch(
   "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             while (true)
