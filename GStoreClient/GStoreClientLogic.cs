@@ -178,7 +178,7 @@ namespace GStoreClient {
             String line;
             if (!File.Exists(file))
             {
-                //TODO
+                Console.WriteLine("Script file not found");
             }
             else
             {
