@@ -24,7 +24,9 @@ namespace gStoreServer {
         public String url;
         //List of servers in each partition, if an entry for a partition exists then this server belongs to that partition
         public Dictionary<String, List<ServerStruct>> partitionServers = new Dictionary<String, List<ServerStruct>>();
-        
+        public Dictionary<String, GStoreServerService.GStoreServerServiceClient> openChannels = new Dictionary<String, GStoreServerService.GStoreServerServiceClient>();
+
+
 
         public PuppetServerService(String h) {
             url = h;
@@ -39,14 +41,19 @@ namespace gStoreServer {
             }
             for(int i = 0; i < request.ServersUrls.Count; i++) {
                 //Add to replicaMaster if this server is the master
-                if (i==0 && request.ServersUrls[i].Equals(url)) {
+                string server_url = request.ServersUrls[i];
+                if (i==0 && server_url.Equals(url)) {
                     Console.WriteLine("\tThis Server: " + url + "  is master of partition: " + request.PartitionName);
                 }
                 // add server url to the list of servers from this partition
+                // check openChannels first to avoid creating two channels for the same server
+                if (!openChannels.ContainsKey(server_url)){
+                    GrpcChannel channel = GrpcChannel.ForAddress("http://" + request.ServersUrls[i]);
+                    GStoreServerService.GStoreServerServiceClient service = new GStoreServerService.GStoreServerServiceClient(channel);
+                    openChannels.Add(request.ServersUrls[i], service);
+                }
                 Console.WriteLine("\tAdded server " + request.ServersUrls[i] +  " to local list of partition servers: " + request.PartitionName);
-                GrpcChannel channel = GrpcChannel.ForAddress("http://" + request.ServersUrls[i]);
-                GStoreServerService.GStoreServerServiceClient service = new GStoreServerService.GStoreServerServiceClient(channel);
-                partitionServers[request.PartitionName].Add(new ServerStruct(request.ServersUrls[i], service));
+                partitionServers[request.PartitionName].Add(new ServerStruct(server_url, openChannels[server_url]));
                 
             }
             return Task.FromResult(new PartitionReply {
@@ -128,9 +135,7 @@ namespace gStoreServer {
         public ServerService(PuppetServerService p) {
             puppetService = p;
         }
-        //public override Task<ReadValueReply> ReadValue(GStoreClientRegisterRequest request, ServerCallContext context) {
-
-        //}
+  
 
         public async override Task<WriteValueReply> WriteValue(WriteValueRequest request, ServerCallContext context) {
             Console.WriteLine("Received write request for partition " + request.PartitionId + " on objet " + request.ObjectId + " with value " + request.Value);
