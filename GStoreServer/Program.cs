@@ -24,8 +24,11 @@ namespace gStoreServer {
         public String url;
         //List of servers in each partition, if an entry for a partition exists then this server belongs to that partition
         public Dictionary<String, List<ServerStruct>> partitionServers = new Dictionary<String, List<ServerStruct>>();
+        public Dictionary<String, GStoreServerService.GStoreServerServiceClient> openChannels = new Dictionary<String, GStoreServerService.GStoreServerServiceClient>();
+
         public bool crashed = false;
         public bool frozen = false;
+
 
 
         public PuppetServerService(String h) {
@@ -41,14 +44,19 @@ namespace gStoreServer {
             }
             for(int i = 0; i < request.ServersUrls.Count; i++) {
                 //Add to replicaMaster if this server is the master
-                if (i==0 && request.ServersUrls[i].Equals(url)) {
+                string server_url = request.ServersUrls[i];
+                if (i==0 && server_url.Equals(url)) {
                     Console.WriteLine("\tThis Server: " + url + "  is master of partition: " + request.PartitionName);
                 }
                 // add server url to the list of servers from this partition
+                // check openChannels first to avoid creating two channels for the same server
+                if (!openChannels.ContainsKey(server_url)){
+                    GrpcChannel channel = GrpcChannel.ForAddress("http://" + request.ServersUrls[i]);
+                    GStoreServerService.GStoreServerServiceClient service = new GStoreServerService.GStoreServerServiceClient(channel);
+                    openChannels.Add(request.ServersUrls[i], service);
+                }
                 Console.WriteLine("\tAdded server " + request.ServersUrls[i] +  " to local list of partition servers: " + request.PartitionName);
-                GrpcChannel channel = GrpcChannel.ForAddress("http://" + request.ServersUrls[i]);
-                GStoreServerService.GStoreServerServiceClient service = new GStoreServerService.GStoreServerServiceClient(channel);
-                partitionServers[request.PartitionName].Add(new ServerStruct(request.ServersUrls[i], service));
+                partitionServers[request.PartitionName].Add(new ServerStruct(server_url, openChannels[server_url]));
                 
             }
             return Task.FromResult(new PartitionReply {
@@ -60,7 +68,7 @@ namespace gStoreServer {
         public override Task<StatusReply> Status(StatusRequest request, ServerCallContext context)
         {
 
-            Console.WriteLine("Status request received!! Server at port: " + url + " running...");
+            Console.WriteLine("Status request received! Server at port: " + url + " running...");
 
             return Task.FromResult(new StatusReply
             {
@@ -97,7 +105,7 @@ namespace gStoreServer {
         public override Task<FreezeReply> Freeze(FreezeRequest request, ServerCallContext context)
         {
 
-            Console.WriteLine("Freeze request received!!");
+            Console.WriteLine("Freeze request received!");
 
             frozen = true;
             
@@ -112,7 +120,7 @@ namespace gStoreServer {
         public override Task<UnfreezeReply> Unfreeze(UnfreezeRequest request, ServerCallContext context)
         {
 
-            Console.WriteLine("Unfreeze request received!!");
+            Console.WriteLine("Unfreeze request received!");
 
             frozen = false;
 
@@ -140,9 +148,7 @@ namespace gStoreServer {
             min_delay = min;
             max_delay = max;
         }
-        //public override Task<ReadValueReply> ReadValue(GStoreClientRegisterRequest request, ServerCallContext context) {
-
-        //}
+  
 
         private int RandomDelay()
         {
@@ -317,14 +323,14 @@ namespace gStoreServer {
             string startupMessage;
             ServerPort serverPort;
 
-            String hostname = Regex.Matches(args[1], "[A-Za-z]+[^:]")[1].ToString();
+            String hostname = Regex.Matches(args[1], "[A-Za-z]+[^:]")[0].ToString();
             int port = int.Parse(Regex.Matches(args[1], "[^:]*[0-9]+")[0].ToString());
             int min_delay = int.Parse(args[2]);
             int max_delay = int.Parse(args[3]);
 
             serverPort = new ServerPort(hostname, port, ServerCredentials.Insecure);
             startupMessage = "Insecure GStoreServer server listening on port " + port;
-            Console.WriteLine(hostname);
+
             PuppetServerService puppetService = new PuppetServerService(hostname + ":" + port);
             ServerService serverService = new ServerService(puppetService,min_delay,max_delay);
 

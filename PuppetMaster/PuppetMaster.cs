@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Linq;
 
 namespace PuppetMaster {
     struct ServerStruct {
@@ -35,7 +36,11 @@ namespace PuppetMaster {
         Dictionary<String, List<String>> partitions = new Dictionary<String, List<String>>();
 
         Dictionary<String, PuppetMasterService.PuppetMasterServiceClient> clients = new Dictionary<String, PuppetMasterService.PuppetMasterServiceClient>();
-  
+        string replication_factor;
+        List<String> pendingComands = new List<String>();
+        bool runPending = false;
+
+
         public PuppetMaster() {
             // setup the puppet master service
             
@@ -63,10 +68,29 @@ namespace PuppetMaster {
 
         public void runCommands() {
             foreach(var command in commandQueue) {
-                executeCommand(command);
-                System.Diagnostics.Debug.WriteLine("executing command:",command);
+                string command_word = command.Split(" ").First();
+                if (command_word == "Partition") {
+                    pendingComands.Add(command);
+                    System.Diagnostics.Debug.WriteLine("pending command:", command);
+                } else{
+                    //Run partition commands if server creation is over
+                    if (pendingComands.Count()>0 && command_word != "Server" && command_word != "ReplicationFactor") {
+                        runPendingCommands();
+                    }
+                    executeCommand(command);
+                    System.Diagnostics.Debug.WriteLine("executing command:", command);
+                }
+                
             }
             commandQueue.Clear();
+        }
+
+        public void runPendingCommands() {
+            foreach(string command in pendingComands) {
+                System.Diagnostics.Debug.WriteLine("executing pending command:", command);
+                executeCommand(command);
+            }
+            pendingComands.Clear();
         }
 
         public void runNextCommand(){
@@ -149,10 +173,11 @@ namespace PuppetMaster {
             String server_id;
             switch (args[0]) {
                 case "ReplicationFactor":
+                    replication_factor = args[1];
                     break;
                 case "Server":
                     server_id = args[1];
-                    String url = args[2];   //ex: localhost:1001
+                    String url = args[2].Replace("http://", "");   //ex: http://localhost:1001
                     String min_delay = args[3];
                     String max_delay = args[4];
                     System.Diagnostics.Debug.WriteLine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
@@ -167,11 +192,13 @@ namespace PuppetMaster {
                     break;
                 case "Partition":
                     int r = int.Parse(args[1]);
+                    if(args[1] != replication_factor) {
+                        System.Diagnostics.Debug.WriteLine("Replication factor not correct in command Partition");
+                    }
                     String part_id = args[2];
                     List<String> server_urls = new List<String>();
                     for (int i = 0; i < r; i++) {
                         server_urls.Add(servers[args[i + 3]].url);
-
                     }
 
                     for (int i = 0; i < r; i++) {
@@ -190,7 +217,7 @@ namespace PuppetMaster {
                     break;
                 case "Client":
                     String username = args[1];
-                    String client_url = args[2];
+                    String client_url = args[2].Replace("http://", "");
                     String script_file = args[3];
                     System.Diagnostics.Debug.WriteLine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 

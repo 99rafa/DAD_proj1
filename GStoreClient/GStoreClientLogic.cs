@@ -178,7 +178,7 @@ namespace GStoreClient {
             String line;
             if (!File.Exists(file))
             {
-                Console.Error.WriteLine("Error: No file found");
+                Console.Error.WriteLine("Error: Script file " + file + " not found");
             }
             else
             {
@@ -314,7 +314,7 @@ namespace GStoreClient {
                     ListServer(server_id);
                     break;
                 case "listGlobal":
-                    Console.WriteLine("ListGlobal instruction");
+                    Console.WriteLine("Reading all objects from the system");
                     ListGlobal();
                     break;
                 case "wait":
