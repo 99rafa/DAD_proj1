@@ -119,8 +119,6 @@ namespace gStoreServer {
     // GStoreServerServiceBase is the generated base implementation of the service
     public class ServerService : GStoreServerService.GStoreServerServiceBase{
         private GrpcChannel channel;
-        private Dictionary<string, GStoreClientService.GStoreClientServiceClient> clientMap =
-            new Dictionary<string, GStoreClientService.GStoreClientServiceClient>();
         public PuppetServerService puppetService;
         private Dictionary<Tuple<String, String>, String> serverObjects = new Dictionary<Tuple<String, String>, String>();
 
@@ -137,13 +135,15 @@ namespace gStoreServer {
         {
             Console.WriteLine("Sending all stored objects...");
 
-            _semaphore.WaitOne();
+            
             ListGlobalReply reply = new ListGlobalReply { };
             foreach(var pair in serverObjects)
             {
+                _semaphore.WaitOne();
                 reply.ObjDesc.Add(new ObjectDescription { ObjectId = pair.Key.Item2,PartitionId = pair.Key.Item1});
+                _semaphore.Release();
             }
-            _semaphore.Release();
+            
             return Task.FromResult(reply);
         }
 
@@ -152,6 +152,7 @@ namespace gStoreServer {
             ListServerObjectsReply reply = new ListServerObjectsReply { };
             foreach(var pair in serverObjects)
             {
+                _semaphore.WaitOne();
                 String obj_id = pair.Key.Item2;
                 String part_id = pair.Key.Item1;
                 String val = pair.Value;
@@ -161,6 +162,7 @@ namespace gStoreServer {
                                                Value = val,
                                                IsMaster = puppetService.serverIsMaster(part_id)
                                              });
+                _semaphore.Release();
             }
             return Task.FromResult(reply);
         }
@@ -261,63 +263,6 @@ namespace gStoreServer {
             return Task.FromResult(new ReadValueReply {
                 Value = value
             });
-        }
-
-        public override Task<GStoreClientRegisterReply> Register(
-            GStoreClientRegisterRequest request, ServerCallContext context) {
-            Console.WriteLine("Deadline: " + context.Deadline);
-            Console.WriteLine("Host: " + context.Host);
-            Console.WriteLine("Method: " + context.Method);
-            Console.WriteLine("Peer: " + context.Peer);
-            return Task.FromResult(Reg(request));
-        }
-
-        public override Task<BcastMsgReply> BcastMsg(BcastMsgRequest request, ServerCallContext context) {
-            return Task.FromResult(Bcast(request));
-        }
-
-
-        public BcastMsgReply Bcast(BcastMsgRequest request) {
-            // random wait to simulate slow msg broadcast: Thread.Sleep(5000);
-            Console.WriteLine("msg arrived. lazy server waiting for server admin to press key.");
-            Console.ReadKey();
-            lock (this) {
-                foreach (string nick in clientMap.Keys) {
-                    if (nick != request.Nick) {
-                        try {
-                            clientMap[nick].RecvMsg(new RecvMsgRequest
-                            {
-                                Msg = request.Nick + ": " + request.Msg 
-                            });
-                        } catch (Exception e) {
-                            Console.WriteLine(e.Message);
-                            clientMap.Remove(nick);
-                        }
-                    }
-                }
-            }
-            Console.WriteLine($"Broadcast message {request.Msg} from {request.Nick}");
-            return new BcastMsgReply
-            {
-                Ok = true
-            };
-        }
-
-        public GStoreClientRegisterReply Reg(GStoreClientRegisterRequest request) {
-                channel = GrpcChannel.ForAddress(request.Url);
-                GStoreClientService.GStoreClientServiceClient client =
-                    new GStoreClientService.GStoreClientServiceClient(channel);
-            lock (this) {
-                clientMap.Add(request.Nick, client);
-            }
-            Console.WriteLine($"Registered client {request.Nick} with URL {request.Url}");
-            GStoreClientRegisterReply reply = new GStoreClientRegisterReply();
-            lock (this) {
-                foreach (string nick in clientMap.Keys) {
-                    reply.Users.Add(new User { Nick = nick });
-                }
-            }
-            return reply;
         }
     }
 

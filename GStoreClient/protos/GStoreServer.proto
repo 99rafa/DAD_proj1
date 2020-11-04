@@ -1,31 +1,11 @@
 ﻿syntax = "proto3";
 
 service GStoreServerService {
-  rpc Register (GStoreClientRegisterRequest) returns (GStoreClientRegisterReply);
-  rpc BcastMsg (BcastMsgRequest) returns (BcastMsgReply);
   rpc ReadValue (ReadValueRequest) returns (ReadValueReply);
   rpc WriteValue (WriteValueRequest) returns (WriteValueReply);
   rpc ListServerObjects (ListServerObjectsRequest)  returns (ListServerObjectsReply);
   rpc ListGlobal (ListGlobalRequest) returns (ListGlobalReply);
   rpc ShareWrite (ShareWriteRequest) returns (ShareWriteReply);
-}
-message GStoreClientRegisterRequest {
-  string nick = 1;
-  string url = 2;	
-}
-message GStoreClientRegisterReply {
-	repeated User users = 1;
-}
-message User {
-   string nick = 1;
-}
-
-message BcastMsgRequest {
-  string nick = 1;
-  string msg = 2;	
-}
-message BcastMsgReply {
-	bool ok = 1;
 }
 
 message ReadValueRequest {

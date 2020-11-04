@@ -26,10 +26,8 @@ namespace GStoreClient {
             service = s;
         }
     }
-    public interface IGStoreClientService {
-        bool AddMsgtoGUI(string s);
-    }
-    public class GStoreClient : IGStoreClientService {
+
+    public class GStoreClient {
         Queue<String> commandQueue = new Queue<String>();
         private GStoreServerService.GStoreServerServiceClient current_server;
         private string username;
@@ -53,10 +51,6 @@ namespace GStoreClient {
             {
                 AddPartitionToDict(partition);
             }
-        }
-
-        public bool AddMsgtoGUI(string s) {
-            return true;
         }
 
         private void AddServerToDict(String server_id, String url)
@@ -349,43 +343,5 @@ namespace GStoreClient {
         public void ServerShutdown(Server server) {
             server.ShutdownAsync().Wait();
         }
-    }
-
-
-    public class ClientService : GStoreClientService.GStoreClientServiceBase
-    {
-        IGStoreClientService clientLogic;
-        
-
-        public ClientService(IGStoreClientService clientLogic)
-        {
-            this.clientLogic = clientLogic;
-        }
-
-        public override Task<RecvMsgReply> RecvMsg(
-            RecvMsgRequest request, ServerCallContext context)
-        {
-            return Task.FromResult(UpdateGUIwithMsg(request));
-        }
-
-        public RecvMsgReply UpdateGUIwithMsg(RecvMsgRequest request)
-        {
-            if (clientLogic.AddMsgtoGUI(request.Msg))
-            {
-                return new RecvMsgReply
-                {
-                    Ok = true
-                };
-            }
-            else
-            {
-                return new RecvMsgReply
-                {
-                    Ok = false
-                };
-
-            }
-        }
-
     }
 }
