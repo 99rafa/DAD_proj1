@@ -2,32 +2,35 @@
 using Grpc.Net.Client;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 
-namespace PuppetMaster {
-    struct ServerStruct {
+namespace PuppetMaster
+{
+    struct ServerStruct
+    {
         public String url;
         public PuppetMasterService.PuppetMasterServiceClient service;
 
-        public ServerStruct(String u, PuppetMasterService.PuppetMasterServiceClient s) {
+        public ServerStruct(String u, PuppetMasterService.PuppetMasterServiceClient s)
+        {
             url = u;
             service = s;
         }
     }
 
-    class PuppetMaster {
+    class PuppetMaster
+    {
         public const String hostname = "localhost";
         public const String port = "10001";
-        
+
         private Server server;
 
 
-        Queue<String> commandQueue= new Queue<String>();
+        Queue<String> commandQueue = new Queue<String>();
         List<GrpcChannel> channels = new List<GrpcChannel>();
 
 
@@ -41,10 +44,12 @@ namespace PuppetMaster {
         bool runPending = false;
 
 
-        public PuppetMaster() {
+        public PuppetMaster()
+        {
             // setup the puppet master service
-            
-            server = new Server {
+
+            server = new Server
+            {
                 Services = { PuppetMasterService.BindService(new PuppetService()) },
                 Ports = { new ServerPort(hostname, Int32.Parse(port), ServerCredentials.Insecure) }
             };
@@ -53,10 +58,11 @@ namespace PuppetMaster {
             AppContext.SetSwitch(
                 "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
-            
+
         }
 
-        public void addComand(String command) {
+        public void addComand(String command)
+        {
             commandQueue.Enqueue(command);
             System.Diagnostics.Debug.WriteLine("added command:", command);
         }
@@ -66,57 +72,71 @@ namespace PuppetMaster {
             commandQueue.Clear();
         }
 
-        public void runCommands() {
-            foreach(var command in commandQueue) {
+        public void runCommands()
+        {
+            foreach (var command in commandQueue)
+            {
                 string command_word = command.Split(" ").First();
-                if (command_word == "Partition") {
+                if (command_word == "Partition")
+                {
                     pendingComands.Add(command);
                     System.Diagnostics.Debug.WriteLine("pending command:", command);
-                } else{
+                }
+                else
+                {
                     //Run partition commands if server creation is over
-                    if (pendingComands.Count()>0 && command_word != "Server" && command_word != "ReplicationFactor") {
+                    if (pendingComands.Count() > 0 && command_word != "Server" && command_word != "ReplicationFactor")
+                    {
                         runPendingCommands();
                     }
                     executeCommand(command);
                     System.Diagnostics.Debug.WriteLine("executing command:", command);
                 }
-                
+
             }
             commandQueue.Clear();
         }
 
-        public void runPendingCommands() {
-            foreach(string command in pendingComands) {
+        public void runPendingCommands()
+        {
+            foreach (string command in pendingComands)
+            {
                 System.Diagnostics.Debug.WriteLine("executing pending command:", command);
                 executeCommand(command);
             }
             pendingComands.Clear();
         }
 
-        public void runNextCommand(){
+        public void runNextCommand()
+        {
 
             string command = commandQueue.Dequeue();
             string command_word = command.Split(" ").First();
-            if (command_word == "Partition") {
+            if (command_word == "Partition")
+            {
                 pendingComands.Add(command);
                 System.Diagnostics.Debug.WriteLine("pending command:", command);
             }
-            else {
+            else
+            {
                 //Run partition commands if server creation is over
-                if (pendingComands.Count() > 0 && command_word != "Server" && command_word != "ReplicationFactor") {
+                if (pendingComands.Count() > 0 && command_word != "Server" && command_word != "ReplicationFactor")
+                {
                     runPendingCommands();
                 }
                 executeCommand(command);
                 System.Diagnostics.Debug.WriteLine("executing command:", command);
             }
-           
+
         }
 
-        private PuppetMasterService.PuppetMasterServiceClient createClientService(String url) {
+        private PuppetMasterService.PuppetMasterServiceClient createClientService(String url)
+        {
             GrpcChannel channel = GrpcChannel.ForAddress("http://" + url);
             return new PuppetMasterService.PuppetMasterServiceClient(channel);
         }
-        private void addServerToDict(String server_id, String url){
+        private void addServerToDict(String server_id, String url)
+        {
             ServerStruct server = new ServerStruct(url, createClientService(url));
             servers.Add(server_id, server);
         }
@@ -145,16 +165,17 @@ namespace PuppetMaster {
 
         }
 
-        public void Crash(String id){
+        public void Crash(String id)
+        {
             if (servers.ContainsKey(id))
                 servers[id].service.CrashAsync(new CrashRequest { });
             else
-                System.Diagnostics.Debug.WriteLine("No such server:",id);
+                System.Diagnostics.Debug.WriteLine("No such server:", id);
         }
 
         public void Freeze(String id)
         {
-            if(servers.ContainsKey(id))
+            if (servers.ContainsKey(id))
                 servers[id].service.FreezeAsync(new FreezeRequest { });
             else
                 System.Diagnostics.Debug.WriteLine("No such server:", id);
@@ -173,7 +194,7 @@ namespace PuppetMaster {
             String args = "";
             foreach (KeyValuePair<String, List<String>> partition in partitions)
             {
-                args += " -p " + partition.Key ;
+                args += " -p " + partition.Key;
                 foreach (var server in partition.Value)
                     args += " " + server + " " + servers[server].url;
 
@@ -182,10 +203,12 @@ namespace PuppetMaster {
             return args;
         }
 
-        public void executeCommand(String c) {
+        public void executeCommand(String c)
+        {
             String[] args = c.Split(" ");
             String server_id;
-            switch (args[0]) {
+            switch (args[0])
+            {
                 case "ReplicationFactor":
                     replication_factor = args[1];
                     break;
@@ -206,21 +229,25 @@ namespace PuppetMaster {
                     break;
                 case "Partition":
                     int r = int.Parse(args[1]);
-                    if(args[1] != replication_factor) {
+                    if (args[1] != replication_factor)
+                    {
                         System.Diagnostics.Debug.WriteLine("Replication factor not correct in command Partition");
                     }
                     String part_id = args[2];
                     List<String> server_urls = new List<String>();
-                    for (int i = 0; i < r; i++) {
+                    for (int i = 0; i < r; i++)
+                    {
                         server_urls.Add(servers[args[i + 3]].url);
                     }
 
-                    for (int i = 0; i < r; i++) {
+                    for (int i = 0; i < r; i++)
+                    {
                         server_id = args[i + 3];
                         AddServerToPartition(part_id, server_id);
-                        
+
                         //AsyncUnaryCall<PartitionReply> reply = servers[server_id].service.PartitionAsync... Melhora o tempo a mil
-                        PartitionReply reply = servers[server_id].service.Partition(new PartitionRequest {
+                        PartitionReply reply = servers[server_id].service.Partition(new PartitionRequest
+                        {
                             PartitionId = part_id,
                             ServersUrls = { server_urls }
                         });
@@ -239,12 +266,12 @@ namespace PuppetMaster {
                     if (!clients.ContainsKey(username))
                         addClientToDict(username, client_url);
                     client_process.StartInfo.FileName = "..\\..\\..\\..\\GStoreClient\\bin\\Debug\\netcoreapp3.1\\GStoreClient.exe";
-                    
+
                     //-p defines a new partion: first argument after is partition_id, next are partitionMaster, server , server....."
                     String serversArgs = buildServersArguments();
 
-                    client_process.StartInfo.Arguments = username + " " + client_url + " " + script_file + serversArgs  ;
-                    client_process.Start(); 
+                    client_process.StartInfo.Arguments = username + " " + client_url + " " + script_file + serversArgs;
+                    client_process.Start();
 
                     break;
                 case "Status":
@@ -272,15 +299,18 @@ namespace PuppetMaster {
         }
     }
 
-    public class PuppetService : PuppetMasterService.PuppetMasterServiceBase {
-        public PuppetService() {
+    public class PuppetService : PuppetMasterService.PuppetMasterServiceBase
+    {
+        public PuppetService()
+        {
 
         }
 
         //TODO
-        public override Task<ReplicationFactorReply> ReplicationFactor(ReplicationFactorRequest request, ServerCallContext context) {
-            return Task.FromResult(new ReplicationFactorReply { }) ;
+        public override Task<ReplicationFactorReply> ReplicationFactor(ReplicationFactorRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(new ReplicationFactorReply { });
         }
-       
+
     }
 }
