@@ -141,6 +141,25 @@ namespace gStoreServer {
             }
             return Task.FromResult(reply);
         }
+
+        public override Task<ListServerObjectsReply> ListServerObjects(ListServerObjectsRequest request, ServerCallContext context)
+        {
+            ListServerObjectsReply reply = new ListServerObjectsReply { };
+            foreach(var pair in serverObjects)
+            {
+                String obj_id = pair.Key.Item2;
+                String part_id = pair.Key.Item1;
+                String val = pair.Value;
+
+                reply.Objects.Add(new Object { ObjectId = obj_id,
+                                               PartitionId = part_id,
+                                               Value = val,
+                                               IsMaster = puppetService.serverIsMaster(part_id)
+                                             });
+            }
+            return Task.FromResult(reply);
+        }
+
         public async override Task<WriteValueReply> WriteValue(WriteValueRequest request, ServerCallContext context) {
             Console.WriteLine("Received write request for partition " + request.PartitionId + " on objet " + request.ObjectId + " with value " + request.Value);
             //Check if this server is master of partition
