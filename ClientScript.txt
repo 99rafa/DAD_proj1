@@ -1,8 +1,8 @@
 write 1 2 pimbas
-write 2 1 jasus
-write 3 3 mygode
 write 1 24 tau_tau_tau
 write 1 ola pau_pau_pau
-write 2 12 tarau
-write 2 bomdia esdrau
+write 1 s pau_pau_pau
+write 1 dfola pau_pau_pau
+write 1 f pau_pau_pau
 listGlobal
+listServer 1

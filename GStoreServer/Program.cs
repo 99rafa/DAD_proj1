@@ -24,7 +24,9 @@ namespace gStoreServer {
         public String url;
         //List of servers in each partition, if an entry for a partition exists then this server belongs to that partition
         public Dictionary<String, List<ServerStruct>> partitionServers = new Dictionary<String, List<ServerStruct>>();
-        
+        public bool crashed = false;
+        public bool frozen = false;
+
 
         public PuppetServerService(String h) {
             url = h;
@@ -81,8 +83,9 @@ namespace gStoreServer {
         public override Task<CrashReply> Crash(CrashRequest request, ServerCallContext context)
         {
 
-            Console.WriteLine("Crash request received!!");
             Console.WriteLine("Crashing...");
+
+            crashed = true;
 
             return Task.FromResult(new CrashReply
             {
@@ -96,6 +99,9 @@ namespace gStoreServer {
 
             Console.WriteLine("Freeze request received!!");
 
+            frozen = true;
+            
+
             return Task.FromResult(new FreezeReply
             {
                 Ok = true
@@ -107,6 +113,8 @@ namespace gStoreServer {
         {
 
             Console.WriteLine("Unfreeze request received!!");
+
+            frozen = false;
 
             return Task.FromResult(new UnfreezeReply
             {
@@ -120,19 +128,31 @@ namespace gStoreServer {
     public class ServerService : GStoreServerService.GStoreServerServiceBase{
         private GrpcChannel channel;
         public PuppetServerService puppetService;
+
         private Dictionary<Tuple<String, String>, String> serverObjects = new Dictionary<Tuple<String, String>, String>();
 
         private Semaphore _semaphore = new Semaphore(1, 1);
 
-        public ServerService(PuppetServerService p) {
+        int min_delay, max_delay;
+
+        public ServerService(PuppetServerService p, int min, int max) {
             puppetService = p;
+            min_delay = min;
+            max_delay = max;
         }
         //public override Task<ReadValueReply> ReadValue(GStoreClientRegisterRequest request, ServerCallContext context) {
 
         //}
 
+        private int RandomDelay()
+        {
+            Random r = new Random();
+            return r.Next(min_delay, max_delay);
+        }
         public override Task<ListGlobalReply> ListGlobal(ListGlobalRequest request, ServerCallContext context)
         {
+            while (puppetService.frozen) ;
+            System.Threading.Thread.Sleep(RandomDelay());
             Console.WriteLine("Sending all stored objects...");
 
             
@@ -149,6 +169,9 @@ namespace gStoreServer {
 
         public override Task<ListServerObjectsReply> ListServerObjects(ListServerObjectsRequest request, ServerCallContext context)
         {
+            while (puppetService.frozen) ;
+            System.Threading.Thread.Sleep(RandomDelay());
+
             ListServerObjectsReply reply = new ListServerObjectsReply { };
             foreach(var pair in serverObjects)
             {
@@ -168,6 +191,10 @@ namespace gStoreServer {
         }
 
         public async override Task<WriteValueReply> WriteValue(WriteValueRequest request, ServerCallContext context) {
+
+            while (puppetService.frozen) ;
+            System.Threading.Thread.Sleep(RandomDelay());
+
             Console.WriteLine("Received write request for partition " + request.PartitionId + " on objet " + request.ObjectId + " with value " + request.Value);
             //Check if this server is master of partition
             if (!puppetService.serverIsMaster(request.PartitionId)) {
@@ -224,6 +251,10 @@ namespace gStoreServer {
         }
 
         public override Task<ShareWriteReply> ShareWrite(ShareWriteRequest request, ServerCallContext context) {
+
+            while (puppetService.frozen) ;
+            System.Threading.Thread.Sleep(RandomDelay());
+
             Console.WriteLine("Received shared write :   objId: " + request.ObjectId + "    value: " + request.Value);
             try {
                 //write object
@@ -241,7 +272,11 @@ namespace gStoreServer {
         }
 
         public override Task<LockReply> Lock(LockRequest request, ServerCallContext context) {
-            //Lock 
+            //Lock
+
+            while (puppetService.frozen) ;
+            System.Threading.Thread.Sleep(RandomDelay());
+
             Console.WriteLine("Locking server for write ");
             _semaphore.WaitOne();
             return Task.FromResult(new LockReply {
@@ -250,6 +285,10 @@ namespace gStoreServer {
         }
 
         public override Task<ReadValueReply> ReadValue(ReadValueRequest request, ServerCallContext context) {
+
+            while (puppetService.frozen) ;
+            System.Threading.Thread.Sleep(RandomDelay());
+
             Console.WriteLine("Received Read request ");
             string value;
             _semaphore.WaitOne();
@@ -285,7 +324,7 @@ namespace gStoreServer {
             startupMessage = "Insecure GStoreServer server listening on port " + port;
 
             PuppetServerService puppetService = new PuppetServerService(hostname + ":" + port);
-            ServerService serverService = new ServerService(puppetService);
+            ServerService serverService = new ServerService(puppetService,min_delay,max_delay);
 
             Server server = new Server
             {
@@ -301,7 +340,12 @@ namespace gStoreServer {
             //Configuring HTTP for client connections in Register method
             AppContext.SetSwitch(
   "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            while (true) ;
+            while (true)
+            {
+                if (puppetService.crashed)
+                    break;
+
+            }
         }
     }
 }
