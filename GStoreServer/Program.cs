@@ -132,6 +132,15 @@ namespace gStoreServer {
 
         //}
 
+        public override Task<ListGlobalReply> ListGlobal(ListGlobalRequest request, ServerCallContext context)
+        {
+            ListGlobalReply reply = new ListGlobalReply { };
+            foreach(var pair in serverObjects)
+            {
+                reply.ObjDesc.Add(new ObjectDescription { ObjectId = pair.Key.Item2,PartitionId = pair.Key.Item1});
+            }
+            return Task.FromResult(reply);
+        }
         public async override Task<WriteValueReply> WriteValue(WriteValueRequest request, ServerCallContext context) {
             Console.WriteLine("Received write request for partition " + request.PartitionId + " on objet " + request.ObjectId + " with value " + request.Value);
             //Check if this server is master of partition

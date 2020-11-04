@@ -48,7 +48,7 @@ namespace GStoreClient {
             //maybe it should not be here as it is command line logic
   
             String[] partitions = args.Split("-p ", StringSplitOptions.RemoveEmptyEntries);
-  
+            Console.WriteLine(args);
             foreach ( var partition in partitions)
             {
                 AddPartitionToDict(partition);
@@ -71,14 +71,18 @@ namespace GStoreClient {
         // receives arguments in the format: partition_master_id partition_master_url server2_id server2_url ....
         private void  AddPartitionToDict(String servers)
         {
-            String [] fields = servers.Split(" ");
-
+            String [] fields = servers.Split(" ", StringSplitOptions.RemoveEmptyEntries);
             String partition_id = fields[0];
+
             partitionMap.Add(partition_id, new List<string>());
             for (int i = 1; i < fields.Length; i += 2)
             {
-                partitionMap[partition_id].Add(fields[i]);
-                AddServerToDict(fields[i], fields[i + 1]);
+                String server_id = fields[i];
+                String server_url = fields[i + 1];
+
+                partitionMap[partition_id].Add(server_id);
+                if(!serverMap.ContainsKey(server_id))
+                    AddServerToDict(server_id, server_url);
             }            
 
         }
@@ -151,6 +155,30 @@ namespace GStoreClient {
             return dictReply;
         }
 
+        public void ListGlobal()
+        {
+            List<String> masters = new List<String>();
+            foreach(var pair in partitionMap)
+            {
+                String master = pair.Value[0];
+
+                if (!masters.Contains(master))
+                    masters.Add(master);
+
+            }
+
+            foreach(String master in masters)
+            {
+                GStoreServerService.GStoreServerServiceClient server = serverMap[master].service;
+
+                ListGlobalReply reply = server.ListGlobal(new ListGlobalRequest { });
+                foreach(var obj in reply.ObjDesc)
+                    Console.WriteLine("Partition_id: " + obj.PartitionId +" , Object_id: " + obj.ObjectId);
+            }
+
+
+        }
+
         public void readScriptFile(String file)
         {
             Console.WriteLine("File:" + file);
@@ -175,18 +203,12 @@ namespace GStoreClient {
         }
 
         public bool isEnd(String command){
-            string[] args = command.Split(" ");
-            if (args[0] == "end-repeat")
-                return true;
-            return false;
+            return command.Split(" ")[0] == "end-repeat";
         }
 
         public bool isBegin(String command)
         {
-            string[] args = command.Split(" ");
-            if (args[0] == "begin-repeat")
-                return true;
-            return false;
+            return command.Split(" ")[0] == "begin-repeat";
         }
         public void beginRepeat(int x,int line){
             List<String> block = new List<String>();
@@ -279,6 +301,7 @@ namespace GStoreClient {
                     break;
                 case "listGlobal":
                     Console.WriteLine("ListGlobal instruction");
+                    ListGlobal();
                     break;
                 case "wait":
                     String ms = args[1];

@@ -67,9 +67,13 @@ message ListGlobalRequest {
 
 }
 
+message ObjectDescription {
+	string partition_id = 1;
+	string object_id = 2;
+}
+
 message ListGlobalReply {
-	repeated string partition_ids = 1;
-	repeated string object_id = 2;
+	repeated ObjectDescription obj_desc = 1;
 }
 
 message LockRequest {
