@@ -24,7 +24,8 @@ namespace gStoreServer {
         public String url;
         //List of servers in each partition, if an entry for a partition exists then this server belongs to that partition
         public Dictionary<String, List<ServerStruct>> partitionServers = new Dictionary<String, List<ServerStruct>>();
-        
+        public bool crashed = false;
+
 
         public PuppetServerService(String h) {
             url = h;
@@ -81,8 +82,9 @@ namespace gStoreServer {
         public override Task<CrashReply> Crash(CrashRequest request, ServerCallContext context)
         {
 
-            Console.WriteLine("Crash request received!!");
             Console.WriteLine("Crashing...");
+
+            crashed = true;
 
             return Task.FromResult(new CrashReply
             {
@@ -356,7 +358,12 @@ namespace gStoreServer {
             //Configuring HTTP for client connections in Register method
             AppContext.SetSwitch(
   "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            while (true) ;
+            while (true)
+            {
+                if (puppetService.crashed)
+                    break;
+
+            }
         }
     }
 }

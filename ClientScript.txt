@@ -6,3 +6,5 @@ write 1 ola pau_pau_pau
 write 2 12 tarau
 write 2 bomdia esdrau
 listGlobal
+listServer 1
+listServer 2
