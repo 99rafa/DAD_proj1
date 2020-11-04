@@ -261,7 +261,9 @@ namespace PuppetMaster {
                     break;
                 case "Wait":
                     String ms = args[1];
+                    System.Diagnostics.Debug.WriteLine("Sleeping ...");
                     System.Threading.Thread.Sleep(int.Parse(ms));
+                    System.Diagnostics.Debug.WriteLine("Sleep ended");
                     break;
                 default:
                     break;

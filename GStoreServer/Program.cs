@@ -50,14 +50,18 @@ namespace gStoreServer {
                 }
                 // add server url to the list of servers from this partition
                 // check openChannels first to avoid creating two channels for the same server
-                if (!openChannels.ContainsKey(server_url)){
-                    GrpcChannel channel = GrpcChannel.ForAddress("http://" + request.ServersUrls[i]);
-                    GStoreServerService.GStoreServerServiceClient service = new GStoreServerService.GStoreServerServiceClient(channel);
-                    openChannels.Add(request.ServersUrls[i], service);
+                try { 
+                    if (!openChannels.ContainsKey(server_url)){
+                        GrpcChannel channel = GrpcChannel.ForAddress("http://" + request.ServersUrls[i]);
+                        GStoreServerService.GStoreServerServiceClient service = new GStoreServerService.GStoreServerServiceClient(channel);
+                        openChannels.Add(request.ServersUrls[i], service);
+                    }
+                    Console.WriteLine("\tAdded server " + request.ServersUrls[i] +  " to local list of partition servers: " + request.PartitionName);
+                    partitionServers[request.PartitionName].Add(new ServerStruct(server_url, openChannels[server_url]));
+                } catch (Exception e) {
+                    Console.WriteLine("Connection failed to server " + request.ServersUrls[i]);
                 }
-                Console.WriteLine("\tAdded server " + request.ServersUrls[i] +  " to local list of partition servers: " + request.PartitionName);
-                partitionServers[request.PartitionName].Add(new ServerStruct(server_url, openChannels[server_url]));
-                
+
             }
             return Task.FromResult(new PartitionReply {
                 Ok = true
@@ -179,7 +183,7 @@ namespace gStoreServer {
         {
             while (puppetService.frozen) ;
             System.Threading.Thread.Sleep(RandomDelay());
-
+            Console.WriteLine("Received listServer request");
             ListServerObjectsReply reply = new ListServerObjectsReply { };
             foreach(var pair in serverObjects)
             {
@@ -187,7 +191,7 @@ namespace gStoreServer {
                 String obj_id = pair.Key.Item2;
                 String part_id = pair.Key.Item1;
                 String val = pair.Value;
-
+                Console.WriteLine("\tAdding object " + obj_id +  " with value " + val);
                 reply.Objects.Add(new Object { ObjectId = obj_id,
                                                PartitionId = part_id,
                                                Value = val,
@@ -206,6 +210,7 @@ namespace gStoreServer {
             Console.WriteLine("Received write request for partition " + request.PartitionId + " on objet " + request.ObjectId + " with value " + request.Value);
             //Check if this server is master of partition
             if (!puppetService.serverIsMaster(request.PartitionId)) {
+                Console.WriteLine("This server is not the master of partition:" + request.PartitionId);
                 return await Task.FromResult(new WriteValueReply {
                     Ok = false
                 });
@@ -214,15 +219,19 @@ namespace gStoreServer {
 
             _semaphore.WaitOne();
             try { 
-                serverObjects.Add(new Tuple<string, string>(request.PartitionId, request.ObjectId), request.Value);
+                serverObjects[new Tuple<string, string>(request.PartitionId, request.ObjectId)] = request.Value;
 
                 //Sends lock request to every server in partition and wait for all acks
                 List<AsyncUnaryCall<LockReply>> pendingLocks = new List<AsyncUnaryCall<LockReply>>();
                 foreach (ServerStruct server in puppetService.getPartitionServers(request.PartitionId)) {
                     if(server.url != puppetService.url) {
                         Console.WriteLine("\t\tSending lock request to " + server.url);
-                        AsyncUnaryCall<LockReply> reply = server.service.LockAsync(new LockRequest { });
-                        pendingLocks.Add(reply);
+                        try {
+                            AsyncUnaryCall<LockReply> reply = server.service.LockAsync(new LockRequest { });
+                            pendingLocks.Add(reply);
+                        } catch (Exception e) {
+                            Console.WriteLine("\t\tConnection failed to server " + server.url);
+                        }
                     }
                     
                 }
@@ -236,12 +245,16 @@ namespace gStoreServer {
                 foreach(ServerStruct server in puppetService.getPartitionServers(request.PartitionId)) {
                     if (server.url != puppetService.url) {
                         Console.WriteLine("\t\tSending write share request to " + server.url);
-                        AsyncUnaryCall<ShareWriteReply> reply = server.service.ShareWriteAsync(new ShareWriteRequest {
-                            PartitionId = request.PartitionId,
-                            ObjectId = request.ObjectId,
-                            Value = request.Value
-                        });
-                        pendingTasks.Add(reply);
+                        try {
+                            AsyncUnaryCall<ShareWriteReply> reply = server.service.ShareWriteAsync(new ShareWriteRequest {
+                                PartitionId = request.PartitionId,
+                                ObjectId = request.ObjectId,
+                                Value = request.Value
+                            });
+                            pendingTasks.Add(reply);
+                        } catch (Exception e) {
+                            Console.WriteLine("Connection failed to server " + server.url);
+                        }
                     }
                 }
 
