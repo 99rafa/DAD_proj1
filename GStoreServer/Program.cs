@@ -82,6 +82,7 @@ namespace gStoreServer {
         {
 
             Console.WriteLine("Crash request received!!");
+            Console.WriteLine("Crashing...");
 
             return Task.FromResult(new CrashReply
             {
@@ -134,11 +135,15 @@ namespace gStoreServer {
 
         public override Task<ListGlobalReply> ListGlobal(ListGlobalRequest request, ServerCallContext context)
         {
+            Console.WriteLine("Sending all stored objects...");
+
+            _semaphore.WaitOne();
             ListGlobalReply reply = new ListGlobalReply { };
             foreach(var pair in serverObjects)
             {
                 reply.ObjDesc.Add(new ObjectDescription { ObjectId = pair.Key.Item2,PartitionId = pair.Key.Item1});
             }
+            _semaphore.Release();
             return Task.FromResult(reply);
         }
         public async override Task<WriteValueReply> WriteValue(WriteValueRequest request, ServerCallContext context) {

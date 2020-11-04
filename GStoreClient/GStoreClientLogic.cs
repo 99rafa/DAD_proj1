@@ -95,6 +95,8 @@ namespace GStoreClient {
 
             Console.WriteLine("Connecting to current server...");
 
+            if (!partitionMap.ContainsKey(partition_id)) return "N/A";
+
             ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
             {
                 PartitionId = partition_id,
@@ -137,22 +139,19 @@ namespace GStoreClient {
             return reply.Ok;
         }
 
-        public Dictionary<Tuple<String, String>, Tuple<String,bool>> ListServer( String server_id)
+        public void ListServer( String server_id)
         {
             GStoreServerService.GStoreServerServiceClient server = serverMap[server_id].service;
-            current_server = server;
 
             ListServerObjectsReply reply = server.ListServerObjects(new ListServerObjectsRequest { });
 
-            Dictionary<Tuple<String, String>, Tuple<String, bool>> dictReply = new Dictionary<Tuple<String, String>, Tuple<String, bool>>();
-            // format: <part_id, obj_id>, <value, isMaster>
-
+            Console.WriteLine("Server " + server_id + " stores the following objects:");
             foreach ( var obj in reply.Objects) {
-                dictReply[new Tuple<String, String>(obj.PartitionId, obj.ObjectId)] =
-                    new Tuple<String, bool>(obj.Value, obj.IsMaster);
+                if (obj.IsMaster)
+                    Console.WriteLine("Object " + obj.ObjectId + " with value " + obj.Value + " in partition " + obj.PartitionId + "(master for this partition).");
+                else
+                    Console.WriteLine("Object " + obj.ObjectId + " with value " + obj.Value + " in partition " + obj.PartitionId);
             }
-
-            return dictReply;
         }
 
         public void ListGlobal()
@@ -267,9 +266,9 @@ namespace GStoreClient {
             int begin = 0, end = 0;
             foreach (var command in commandQueue)
             {
-                if (command.Split(" ")[0].Equals("begin-repeat")) begin++;
+                if (isBegin(command)) begin++;
 
-                else if (command.Split(" ")[0].Equals("end-repeat")) end++;
+                else if (isEnd(command)) end++;
 
                 if (end > begin) return false;
             }
