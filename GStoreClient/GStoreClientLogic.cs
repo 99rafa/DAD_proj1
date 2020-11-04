@@ -132,9 +132,9 @@ namespace GStoreClient {
 
             GStoreServerService.GStoreServerServiceClient master = serverMap[server_id].service;
             current_server = master;
-
+            Console.WriteLine(value);
             Console.WriteLine("Connecting to master replica with server_id " + server_id + " of partition " + partition_id);
-            Console.WriteLine("Sending Write to partition " + partition_id + " on object " + object_id + " with value " + value);
+            Console.WriteLine("Sending Write to partition " + partition_id + " on object " + object_id + " with value '" + value + "'");
 
             WriteValueReply reply = master.WriteValue(new WriteValueRequest
             {
@@ -147,14 +147,20 @@ namespace GStoreClient {
 
         public void ListServer( String server_id)
         {
+            if (!serverMap.ContainsKey(server_id))
+            {
+                Console.Error.WriteLine("Error: Unable to locate server " + server_id);
+                return;
+            }
             GStoreServerService.GStoreServerServiceClient server = serverMap[server_id].service;
 
             ListServerObjectsReply reply = server.ListServerObjects(new ListServerObjectsRequest { });
 
             Console.WriteLine("Server " + server_id + " stores the following objects:");
             foreach ( var obj in reply.Objects) {
+
                 if (obj.IsMaster)
-                    Console.WriteLine("Object " + obj.ObjectId + " with value " + obj.Value + " in partition " + obj.PartitionId + "(master for this partition).");
+                    Console.WriteLine("Object " + obj.ObjectId + " with value '" + obj.Value + "' in partition " + obj.PartitionId + "(master for this partition).");
                 else
                     Console.WriteLine("Object " + obj.ObjectId + " with value " + obj.Value + " in partition " + obj.PartitionId);
             }
@@ -316,7 +322,7 @@ namespace GStoreClient {
                 case "write":
                     partition_id = args[1];
                     object_id = args[2];
-                    String value = args[3];
+                    String value = op.Split('"')[1];
                     WriteValue(partition_id, object_id, value);
                     break;
                 case "listServer":
