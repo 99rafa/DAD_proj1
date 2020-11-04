@@ -61,6 +61,11 @@ namespace PuppetMaster {
             System.Diagnostics.Debug.WriteLine("added command:", command);
         }
 
+        public void clearCommands()
+        {
+            commandQueue.Clear();
+        }
+
         public void runCommands() {
             foreach(var command in commandQueue) {
                 string command_word = command.Split(" ").First();
@@ -89,6 +94,7 @@ namespace PuppetMaster {
         }
 
         public void runNextCommand(){
+
             string command = commandQueue.Dequeue();
             string command_word = command.Split(" ").First();
             if (command_word == "Partition") {
@@ -212,6 +218,7 @@ namespace PuppetMaster {
                     for (int i = 0; i < r; i++) {
                         server_id = args[i + 3];
                         AddServerToPartition(part_id, server_id);
+                        
                         //AsyncUnaryCall<PartitionReply> reply = servers[server_id].service.PartitionAsync... Melhora o tempo a mil
                         PartitionReply reply = servers[server_id].service.Partition(new PartitionRequest {
                             PartitionId = part_id,
@@ -254,7 +261,9 @@ namespace PuppetMaster {
                     break;
                 case "Wait":
                     String ms = args[1];
+                    System.Diagnostics.Debug.WriteLine("Sleeping ...");
                     System.Threading.Thread.Sleep(int.Parse(ms));
+                    System.Diagnostics.Debug.WriteLine("Sleep ended");
                     break;
                 default:
                     break;

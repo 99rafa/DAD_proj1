@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GStoreClient
@@ -43,9 +44,9 @@ namespace GStoreClient
             
             String hostname = Regex.Matches(args[1], "[A-Za-z]+[^:]")[0].ToString();
             int port = int.Parse(Regex.Matches(args[1], "[^:]*[0-9]+")[0].ToString());
-
+            
             String partitions = "";
-
+           
             partitions += args[3];
             for (int i = 4; i < args.Length; i++)
             {
@@ -64,6 +65,7 @@ namespace GStoreClient
                     "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
             client = new GStoreClient(username, hostname, partitions);
+            Console.WriteLine(partitions);
             client.readScriptFile(ops_file);
 
             while (true);

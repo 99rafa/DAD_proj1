@@ -46,7 +46,7 @@ namespace GStoreClient {
             //maybe it should not be here as it is command line logic
   
             String[] partitions = args.Split("-p ", StringSplitOptions.RemoveEmptyEntries);
-            Console.WriteLine(args);
+
             foreach ( var partition in partitions)
             {
                 AddPartitionToDict(partition);
@@ -82,34 +82,52 @@ namespace GStoreClient {
         }
 
 
-        public String ReadValue(
+        public void ReadValue(
            string partition_id, string object_id, string server_id)
         {
             if (current_server == null) current_server = serverMap[server_id].service;
 
             Console.WriteLine("Connecting to current server...");
 
-            if (!partitionMap.ContainsKey(partition_id)) return "N/A";
-
-            ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
+            if (!partitionMap.ContainsKey(partition_id))
             {
-                PartitionId = partition_id,
-                ObjectId = object_id,
-            });
-            if (reply.Value.Equals("N/A"))
-            {
-                Console.WriteLine("Unable to fetch object " + object_id + " from current server");
-                Console.WriteLine("Trying server " + server_id + "...");
-                GStoreServerService.GStoreServerServiceClient new_server = serverMap[server_id].service;
-
-                reply = new_server.ReadValue(new ReadValueRequest
-                {
+                Console.Error.WriteLine("Error: Partition " + partition_id + " does not exist in the system");
+                return;
+            }
+            try {
+                ReadValueReply reply = current_server.ReadValue(new ReadValueRequest {
                     PartitionId = partition_id,
                     ObjectId = object_id,
                 });
-                current_server = new_server;
+            
+                if (reply.Value.Equals("N/A"))
+                {
+                    Console.WriteLine("Unable to fetch object " + object_id + " from current server");
+                    if (server_id == "-1") return;
+                    Console.WriteLine("Trying server " + server_id + "...");
+                    if (serverMap.ContainsKey(server_id))
+                    {
+                        GStoreServerService.GStoreServerServiceClient new_server = serverMap[server_id].service;
+
+                        reply = new_server.ReadValue(new ReadValueRequest
+                        {
+                            PartitionId = partition_id,
+                            ObjectId = object_id,
+                        });
+                        current_server = new_server;
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine("Error: Unable to locate server " + server_id);
+                    }
+                    if (reply.Value.Equals("N/A")) Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from given server");
+                    else Console.WriteLine("Read value " + reply.Value + " on partition " + partition_id + " on object " + object_id);
+                }
+                    else Console.WriteLine("Read value " + reply.Value + " on partition " + partition_id + " on object " + object_id);
+
+            } catch (Exception e) {
+                Console.WriteLine("Connection failed to server ");// + server_id + " of partition " + partition_id);
             }
-            return reply.Value;
         }
 
         public bool WriteValue(
@@ -124,13 +142,19 @@ namespace GStoreClient {
             Console.WriteLine("Connecting to master replica with server_id " + server_id + " of partition " + partition_id);
             Console.WriteLine("Sending Write to partition " + partition_id + " on object " + object_id + " with value " + value);
 
-            WriteValueReply reply = master.WriteValue(new WriteValueRequest
-            {
-                PartitionId = partition_id,
-                ObjectId = object_id,
-                Value = value
-            }) ;
-            return reply.Ok;
+            try {
+
+                WriteValueReply reply = master.WriteValue(new WriteValueRequest {
+                    PartitionId = partition_id,
+                    ObjectId = object_id,
+                    Value = value
+                });
+                return reply.Ok;
+            } catch(Exception e) {
+                Console.WriteLine("Connection failed to server " + server_id + " of partition " + partition_id);
+            }
+            return false;
+            
         }
 
         public void ListServer( String server_id)
@@ -163,10 +187,14 @@ namespace GStoreClient {
             foreach(String master in masters)
             {
                 GStoreServerService.GStoreServerServiceClient server = serverMap[master].service;
-
-                ListGlobalReply reply = server.ListGlobal(new ListGlobalRequest { });
-                foreach(var obj in reply.ObjDesc)
-                    Console.WriteLine("Partition_id: " + obj.PartitionId +" , Object_id: " + obj.ObjectId);
+                try {
+                    ListGlobalReply reply = server.ListGlobal(new ListGlobalRequest { });
+                    foreach(var obj in reply.ObjDesc)
+                        Console.WriteLine("Partition_id: " + obj.PartitionId +" , Object_id: " + obj.ObjectId);
+                }
+                catch (Exception e) {
+                    Console.WriteLine("Connection failed to server " + master);
+                }
             }
 
 
@@ -174,11 +202,11 @@ namespace GStoreClient {
 
         public void readScriptFile(String file)
         {
-            Console.WriteLine("File:" + file);
+
             String line;
             if (!File.Exists(file))
             {
-                Console.WriteLine("Script file not found");
+                Console.Error.WriteLine("Error: Script file " + file + " not found");
             }
             else
             {
@@ -299,13 +327,12 @@ namespace GStoreClient {
                     partition_id = args[1];
                     object_id = args[2];
                     server_id = args[3];
-                    String read_value = ReadValue(partition_id, object_id, server_id);
-                    Console.WriteLine("Read value " + read_value + " on partition " + partition_id + " on object " + object_id);
+                    ReadValue(partition_id, object_id, server_id);
                     break;
                 case "write":
                     partition_id = args[1];
                     object_id = args[2];
-                    String value = args[3];
+                    String value = op.Split('"')[1];
                     WriteValue(partition_id, object_id, value);
                     break;
                 case "listServer":
@@ -314,7 +341,7 @@ namespace GStoreClient {
                     ListServer(server_id);
                     break;
                 case "listGlobal":
-                    Console.WriteLine("ListGlobal instruction");
+                    Console.WriteLine("Reading all objects from the system");
                     ListGlobal();
                     break;
                 case "wait":
