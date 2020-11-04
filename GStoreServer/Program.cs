@@ -154,7 +154,7 @@ namespace gStoreServer {
         {
             Random r = new Random();
             int delay = r.Next(min_delay, max_delay);
-            Console.WriteLine("Adding a " + delay + " ms delay to tht request");
+            Console.WriteLine("Adding a " + delay + " ms delay to the request");
             return delay;
         }
         public override Task<ListGlobalReply> ListGlobal(ListGlobalRequest request, ServerCallContext context)

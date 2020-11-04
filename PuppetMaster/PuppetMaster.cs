@@ -94,8 +94,22 @@ namespace PuppetMaster {
         }
 
         public void runNextCommand(){
-            if (commandQueue.Count != 0)
-                executeCommand(commandQueue.Dequeue());
+
+            string command = commandQueue.Dequeue();
+            string command_word = command.Split(" ").First();
+            if (command_word == "Partition") {
+                pendingComands.Add(command);
+                System.Diagnostics.Debug.WriteLine("pending command:", command);
+            }
+            else {
+                //Run partition commands if server creation is over
+                if (pendingComands.Count() > 0 && command_word != "Server" && command_word != "ReplicationFactor") {
+                    runPendingCommands();
+                }
+                executeCommand(command);
+                System.Diagnostics.Debug.WriteLine("executing command:", command);
+            }
+           
         }
 
         private PuppetMasterService.PuppetMasterServiceClient createClientService(String url) {

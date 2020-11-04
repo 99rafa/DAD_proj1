@@ -82,15 +82,18 @@ namespace GStoreClient {
         }
 
 
-        public String ReadValue(
+        public void ReadValue(
            string partition_id, string object_id, string server_id)
         {
             if (current_server == null) current_server = serverMap[server_id].service;
 
             Console.WriteLine("Connecting to current server...");
 
-            if (!partitionMap.ContainsKey(partition_id)) return "N/A";
-
+            if (!partitionMap.ContainsKey(partition_id))
+            {
+                Console.Error.WriteLine("Error: Partition " + partition_id + " does not exist in the system");
+                return;
+            }
             ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
             {
                 PartitionId = partition_id,
@@ -100,16 +103,25 @@ namespace GStoreClient {
             {
                 Console.WriteLine("Unable to fetch object " + object_id + " from current server");
                 Console.WriteLine("Trying server " + server_id + "...");
-                GStoreServerService.GStoreServerServiceClient new_server = serverMap[server_id].service;
-
-                reply = new_server.ReadValue(new ReadValueRequest
+                if (serverMap.ContainsKey(server_id))
                 {
-                    PartitionId = partition_id,
-                    ObjectId = object_id,
-                });
-                current_server = new_server;
+                    GStoreServerService.GStoreServerServiceClient new_server = serverMap[server_id].service;
+
+                    reply = new_server.ReadValue(new ReadValueRequest
+                    {
+                        PartitionId = partition_id,
+                        ObjectId = object_id,
+                    });
+                    current_server = new_server;
+                }
+                else
+                {
+                    Console.Error.WriteLine("Error: Unable to locate server " + server_id);
+                }
+                if (reply.Value.Equals("N/A")) Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from given server");
+                else Console.WriteLine("Read value " + reply.Value + " on partition " + partition_id + " on object " + object_id);
             }
-            return reply.Value;
+                else Console.WriteLine("Read value " + reply.Value + " on partition " + partition_id + " on object " + object_id);
         }
 
         public bool WriteValue(
@@ -299,8 +311,7 @@ namespace GStoreClient {
                     partition_id = args[1];
                     object_id = args[2];
                     server_id = args[3];
-                    String read_value = ReadValue(partition_id, object_id, server_id);
-                    Console.WriteLine("Read value " + read_value + " on partition " + partition_id + " on object " + object_id);
+                    ReadValue(partition_id, object_id, server_id);
                     break;
                 case "write":
                     partition_id = args[1];
