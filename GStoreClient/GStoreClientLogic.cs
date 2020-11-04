@@ -26,10 +26,8 @@ namespace GStoreClient {
             service = s;
         }
     }
-    public interface IGStoreClientService {
-        bool AddMsgtoGUI(string s);
-    }
-    public class GStoreClient : IGStoreClientService {
+
+    public class GStoreClient {
         Queue<String> commandQueue = new Queue<String>();
         private GStoreServerService.GStoreServerServiceClient current_server;
         private string username;
@@ -48,15 +46,11 @@ namespace GStoreClient {
             //maybe it should not be here as it is command line logic
   
             String[] partitions = args.Split("-p ", StringSplitOptions.RemoveEmptyEntries);
-  
+            Console.WriteLine(args);
             foreach ( var partition in partitions)
             {
                 AddPartitionToDict(partition);
             }
-        }
-
-        public bool AddMsgtoGUI(string s) {
-            return true;
         }
 
         private void AddServerToDict(String server_id, String url)
@@ -71,14 +65,18 @@ namespace GStoreClient {
         // receives arguments in the format: partition_master_id partition_master_url server2_id server2_url ....
         private void  AddPartitionToDict(String servers)
         {
-            String [] fields = servers.Split(" ");
-
+            String [] fields = servers.Split(" ", StringSplitOptions.RemoveEmptyEntries);
             String partition_id = fields[0];
+
             partitionMap.Add(partition_id, new List<string>());
             for (int i = 1; i < fields.Length; i += 2)
             {
-                partitionMap[partition_id].Add(fields[i]);
-                AddServerToDict(fields[i], fields[i + 1]);
+                String server_id = fields[i];
+                String server_url = fields[i + 1];
+
+                partitionMap[partition_id].Add(server_id);
+                if(!serverMap.ContainsKey(server_id))
+                    AddServerToDict(server_id, server_url);
             }            
 
         }
@@ -90,6 +88,8 @@ namespace GStoreClient {
             if (current_server == null) current_server = serverMap[server_id].service;
 
             Console.WriteLine("Connecting to current server...");
+
+            if (!partitionMap.ContainsKey(partition_id)) return "N/A";
 
             ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
             {
@@ -133,22 +133,43 @@ namespace GStoreClient {
             return reply.Ok;
         }
 
-        public Dictionary<Tuple<String, String>, Tuple<String,bool>> ListServer( String server_id)
+        public void ListServer( String server_id)
         {
             GStoreServerService.GStoreServerServiceClient server = serverMap[server_id].service;
-            current_server = server;
 
             ListServerObjectsReply reply = server.ListServerObjects(new ListServerObjectsRequest { });
 
-            Dictionary<Tuple<String, String>, Tuple<String, bool>> dictReply = new Dictionary<Tuple<String, String>, Tuple<String, bool>>();
-            // format: <part_id, obj_id>, <value, isMaster>
-
+            Console.WriteLine("Server " + server_id + " stores the following objects:");
             foreach ( var obj in reply.Objects) {
-                dictReply[new Tuple<String, String>(obj.PartitionId, obj.ObjectId)] =
-                    new Tuple<String, bool>(obj.Value, obj.IsMaster);
+                if (obj.IsMaster)
+                    Console.WriteLine("Object " + obj.ObjectId + " with value " + obj.Value + " in partition " + obj.PartitionId + "(master for this partition).");
+                else
+                    Console.WriteLine("Object " + obj.ObjectId + " with value " + obj.Value + " in partition " + obj.PartitionId);
+            }
+        }
+
+        public void ListGlobal()
+        {
+            List<String> masters = new List<String>();
+            foreach(var pair in partitionMap)
+            {
+                String master = pair.Value[0];
+
+                if (!masters.Contains(master))
+                    masters.Add(master);
+
             }
 
-            return dictReply;
+            foreach(String master in masters)
+            {
+                GStoreServerService.GStoreServerServiceClient server = serverMap[master].service;
+
+                ListGlobalReply reply = server.ListGlobal(new ListGlobalRequest { });
+                foreach(var obj in reply.ObjDesc)
+                    Console.WriteLine("Partition_id: " + obj.PartitionId +" , Object_id: " + obj.ObjectId);
+            }
+
+
         }
 
         public void readScriptFile(String file)
@@ -175,18 +196,12 @@ namespace GStoreClient {
         }
 
         public bool isEnd(String command){
-            string[] args = command.Split(" ");
-            if (args[0] == "end-repeat")
-                return true;
-            return false;
+            return command.Split(" ")[0] == "end-repeat";
         }
 
         public bool isBegin(String command)
         {
-            string[] args = command.Split(" ");
-            if (args[0] == "begin-repeat")
-                return true;
-            return false;
+            return command.Split(" ")[0] == "begin-repeat";
         }
         public void beginRepeat(int x,int line){
             List<String> block = new List<String>();
@@ -245,9 +260,9 @@ namespace GStoreClient {
             int begin = 0, end = 0;
             foreach (var command in commandQueue)
             {
-                if (command.Split(" ")[0].Equals("begin-repeat")) begin++;
+                if (isBegin(command)) begin++;
 
-                else if (command.Split(" ")[0].Equals("end-repeat")) end++;
+                else if (isEnd(command)) end++;
 
                 if (end > begin) return false;
             }
@@ -300,6 +315,7 @@ namespace GStoreClient {
                     break;
                 case "listGlobal":
                     Console.WriteLine("ListGlobal instruction");
+                    ListGlobal();
                     break;
                 case "wait":
                     String ms = args[1];
@@ -327,43 +343,5 @@ namespace GStoreClient {
         public void ServerShutdown(Server server) {
             server.ShutdownAsync().Wait();
         }
-    }
-
-
-    public class ClientService : GStoreClientService.GStoreClientServiceBase
-    {
-        IGStoreClientService clientLogic;
-        
-
-        public ClientService(IGStoreClientService clientLogic)
-        {
-            this.clientLogic = clientLogic;
-        }
-
-        public override Task<RecvMsgReply> RecvMsg(
-            RecvMsgRequest request, ServerCallContext context)
-        {
-            return Task.FromResult(UpdateGUIwithMsg(request));
-        }
-
-        public RecvMsgReply UpdateGUIwithMsg(RecvMsgRequest request)
-        {
-            if (clientLogic.AddMsgtoGUI(request.Msg))
-            {
-                return new RecvMsgReply
-                {
-                    Ok = true
-                };
-            }
-            else
-            {
-                return new RecvMsgReply
-                {
-                    Ok = false
-                };
-
-            }
-        }
-
     }
 }

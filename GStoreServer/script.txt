@@ -1,5 +1,0 @@
-﻿begin-repeat 3
-	wait
-	wait
-	wait $i
-end-repeat
