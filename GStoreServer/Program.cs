@@ -58,7 +58,7 @@ namespace gStoreServer {
         public override Task<StatusReply> Status(StatusRequest request, ServerCallContext context)
         {
 
-            Console.WriteLine("Status request received!!");
+            Console.WriteLine("Status request received!! Server at port: " + url + " running...");
 
             return Task.FromResult(new StatusReply
             {

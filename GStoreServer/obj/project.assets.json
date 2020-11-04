@@ -391,19 +391,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\User\\.nuget\\packages\\": {}
+    "C:\\Users\\Rafael\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\User\\Documents\\DAD_proj1\\GStoreServer\\GStoreServer.csproj",
+      "projectUniqueName": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreServer\\GStoreServer.csproj",
       "projectName": "GStoreServer",
-      "projectPath": "C:\\Users\\User\\Documents\\DAD_proj1\\GStoreServer\\GStoreServer.csproj",
-      "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\User\\Documents\\DAD_proj1\\GStoreServer\\obj\\",
+      "projectPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreServer\\GStoreServer.csproj",
+      "packagesPath": "C:\\Users\\Rafael\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Rafael\\Documents\\DAD\\project\\GStoreServer\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Rafael\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [

@@ -16,6 +16,18 @@ namespace GStoreClient
             url = h;
         }
 
+        public override Task<StatusReply> Status(StatusRequest request, ServerCallContext context)
+        {
+
+            Console.WriteLine("Status request received!! Client at port: " + url + " running...");
+
+            return Task.FromResult(new StatusReply
+            {
+                Ok = true
+            });
+
+        }
+
     }
     static class Program {
         /// <summary>
@@ -47,6 +59,7 @@ namespace GStoreClient
                 Ports = {serverPort}
             };
             server.Start();
+
             AppContext.SetSwitch(
                     "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 

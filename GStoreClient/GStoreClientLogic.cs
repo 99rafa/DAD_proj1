@@ -30,7 +30,6 @@ namespace GStoreClient {
         bool AddMsgtoGUI(string s);
     }
     public class GStoreClient : IGStoreClientService {
-        private  GrpcChannel channel;
         Queue<String> commandQueue = new Queue<String>();
         private GStoreServerService.GStoreServerServiceClient current_server;
         private string username;
@@ -52,7 +51,6 @@ namespace GStoreClient {
   
             foreach ( var partition in partitions)
             {
-
                 AddPartitionToDict(partition);
             }
         }
@@ -131,7 +129,7 @@ namespace GStoreClient {
                 PartitionId = partition_id,
                 ObjectId = object_id,
                 Value = value
-            });
+            }) ;
             return reply.Ok;
         }
 
@@ -293,7 +291,7 @@ namespace GStoreClient {
                 case "end-repeat":
                     break;
                 default:
-                    Console.Error.WriteLine("Error:Not a recognized operation");
+                    Console.Error.WriteLine("Error: Not a recognized operation");
                     break;
             }
         }
