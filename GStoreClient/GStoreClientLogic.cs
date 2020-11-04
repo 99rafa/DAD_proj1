@@ -239,10 +239,31 @@ namespace GStoreClient {
             else
                 return 0;
         }
+
+        public bool isCorrectRepeat()
+        {
+            int begin = 0, end = 0;
+            foreach (var command in commandQueue)
+            {
+                if (command.Split(" ")[0].Equals("begin-repeat")) begin++;
+
+                else if (command.Split(" ")[0].Equals("end-repeat")) end++;
+
+                if (end > begin) return false;
+            }
+
+            return begin == end;
+        }
         public void processCommands()
         {
             int line = 1;
             int context = 0;
+
+            if (!isCorrectRepeat())
+            { 
+                Console.Error.WriteLine("Syntax Error: Begin/End-repeat loop");
+                commandQueue.Clear();
+            } 
             foreach (var command in commandQueue)
             {
                 if(context == 0)
@@ -284,8 +305,9 @@ namespace GStoreClient {
                     String ms = args[1];
                     Console.WriteLine("Delaying execution for " + ms + " milliseconds");
                     System.Threading.Thread.Sleep(int.Parse(ms));
+                    Console.WriteLine("Program resumed");
                     break;
-                case "begin-repeat":
+                case "begin-repeat":                                                                                                                                                                                                                                                                               
                     beginRepeat(int.Parse(args[1]), line);
                     break;
                 case "end-repeat":
