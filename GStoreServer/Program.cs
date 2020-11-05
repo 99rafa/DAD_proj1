@@ -187,10 +187,12 @@ namespace gStoreServer
 
 
             ListGlobalReply reply = new ListGlobalReply { };
+            String partition_id = request.PartitionId;
             foreach (var pair in serverObjects)
             {
                 _semaphore.WaitOne();
-                reply.ObjDesc.Add(new ObjectDescription { ObjectId = pair.Key.Item2, PartitionId = pair.Key.Item1 });
+                if(pair.Key.Item1 == partition_id)
+                    reply.ObjDesc.Add(new ObjectDescription { ObjectId = pair.Key.Item2, PartitionId = pair.Key.Item1 });
                 _semaphore.Release();
             }
 

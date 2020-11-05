@@ -193,7 +193,7 @@ namespace GStoreClient
                     GStoreServerService.GStoreServerServiceClient server = serverMap[server_id].service;
                     try
                     {
-                        ListGlobalReply reply = server.ListGlobal(new ListGlobalRequest { });
+                        ListGlobalReply reply = server.ListGlobal(new ListGlobalRequest {PartitionId = pair.Key});
                         foreach (var obj in reply.ObjDesc)
                             Console.WriteLine("Partition_id: " + obj.PartitionId + " , Object_id: " + obj.ObjectId);
                         break;

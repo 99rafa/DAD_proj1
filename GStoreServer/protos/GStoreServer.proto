@@ -44,7 +44,7 @@ message Object {
 }
 
 message ListGlobalRequest {
-
+	string partition_id = 1;
 }
 
 message ObjectDescription {
