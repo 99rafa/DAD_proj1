@@ -72,6 +72,7 @@ namespace gStoreServer
                 catch (Exception e)
                 {
                     Console.WriteLine("Connection failed to server " + request.ServersUrls[i]);
+                    removeServer(request.ServersUrls[i]);
                 }
 
             }
@@ -149,6 +150,20 @@ namespace gStoreServer
                 Ok = true
             });
 
+        }
+
+        public void removeServer(string url) {
+
+            openChannels.Remove(url);
+            List<string> removals = new List<string>();
+            foreach (KeyValuePair<string, List<ServerStruct>> partition in partitionServers) {
+                if (partition.Value.Any(server => server.url == url)) {
+                    removals.Add(partition.Key);
+                }
+            }
+            foreach(string remove in removals) {
+                partitionServers[remove] = partitionServers[remove].Where(server => server.url != url).ToList();
+            }
         }
     }
     // GStoreServerService is the namespace defined in the protobuf
@@ -249,30 +264,36 @@ namespace gStoreServer
 
                 //Sends lock request to every server in partition and wait for all acks
                 List<AsyncUnaryCall<LockReply>> pendingLocks = new List<AsyncUnaryCall<LockReply>>();
-                foreach (ServerStruct server in puppetService.getPartitionServers(request.PartitionId))
+                List<ServerStruct> partitionServers = puppetService.getPartitionServers(request.PartitionId);
+                foreach (ServerStruct server in partitionServers)
                 {
                     if (server.url != puppetService.url)
                     {
                         Console.WriteLine("\t\tSending lock request to " + server.url);
-                        try
-                        {
-                            AsyncUnaryCall<LockReply> reply = server.service.LockAsync(new LockRequest { });
-                            pendingLocks.Add(reply);
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine("\t\tConnection failed to server " + server.url);
-                        }
+                        AsyncUnaryCall<LockReply> reply = server.service.LockAsync(new LockRequest { });
+                        pendingLocks.Add(reply);
+                        
                     }
 
                 }
 
-                //wait for all LOCK responses
-                await Task.WhenAll(pendingLocks.Select(c => c.ResponseAsync));
-                Console.WriteLine("\tLock requests completed");
+                try {
+                    //wait for all LOCK responses
+                    await Task.WhenAll(pendingLocks.Select(c => c.ResponseAsync));
+                    Console.WriteLine("\tLock requests completed");
+                }
+                catch (RpcException e) {
+                    Console.WriteLine("\t\tConnection failed to server, removing server");
+                    for(int i=0; i<pendingLocks.Count(); i++) {
+                        if(pendingLocks[i].ResponseAsync.Exception != null) {
+                            Console.WriteLine("\t\tRemoving server: " + partitionServers[i+1].url); //i+1 because the master server is also in the partitionServers list
+                            puppetService.removeServer(partitionServers[i + 1].url);
+                        }
+                    }
+                }
 
-                //Share write with all replicas
-                List<AsyncUnaryCall<ShareWriteReply>> pendingTasks = new List<AsyncUnaryCall<ShareWriteReply>>();
+            //Share write with all replicas
+            List<AsyncUnaryCall<ShareWriteReply>> pendingTasks = new List<AsyncUnaryCall<ShareWriteReply>>();
                 foreach (ServerStruct server in puppetService.getPartitionServers(request.PartitionId))
                 {
                     if (server.url != puppetService.url)
@@ -290,7 +311,8 @@ namespace gStoreServer
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine("Connection failed to server " + server.url);
+                            Console.WriteLine("Connection failed to server " + server.url + " removing server");
+                            puppetService.removeServer(server.url);
                         }
                     }
                 }
