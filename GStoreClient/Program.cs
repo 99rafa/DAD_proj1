@@ -64,7 +64,7 @@ namespace GStoreClient
                     "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
             client = new GStoreClient(username, hostname, partitions);
-            Console.WriteLine(partitions);
+
             client.readScriptFile(ops_file);
 
             while (true) ;

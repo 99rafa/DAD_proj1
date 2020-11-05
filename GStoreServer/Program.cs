@@ -69,7 +69,7 @@ namespace gStoreServer
                     Console.WriteLine("\tAdded server " + request.ServersUrls[i] + " to local list of partition servers: " + request.PartitionName);
                     partitionServers[request.PartitionName].Add(new ServerStruct(server_url, openChannels[server_url]));
                 }
-                catch (Exception e)
+                catch (RpcException)
                 {
                     Console.WriteLine("Connection failed to server " + request.ServersUrls[i]);
                     removeServer(request.ServersUrls[i]);
@@ -206,7 +206,7 @@ namespace gStoreServer
             foreach (var pair in serverObjects)
             {
                 _semaphore.WaitOne();
-                if(pair.Key.Item1 == partition_id)
+                if (pair.Key.Item1 == partition_id)
                     reply.ObjDesc.Add(new ObjectDescription { ObjectId = pair.Key.Item2, PartitionId = pair.Key.Item1 });
                 _semaphore.Release();
             }
@@ -309,7 +309,7 @@ namespace gStoreServer
                             });
                             pendingTasks.Add(reply);
                         }
-                        catch (Exception e)
+                        catch (RpcException)
                         {
                             Console.WriteLine("Connection failed to server " + server.url + " removing server");
                             puppetService.removeServer(server.url);
