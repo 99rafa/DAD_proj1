@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
 
 public delegate void DelAddMsg(string s);
 
@@ -126,7 +125,7 @@ namespace GStoreClient
                 else Console.WriteLine("Read value " + reply.Value + " on partition " + partition_id + " on object " + object_id);
 
             }
-            catch (Grpc.Core.RpcException e)
+            catch (RpcException)
             {
                 Console.WriteLine("Connection failed to server ");// + server_id + " of partition " + partition_id);
             }
@@ -153,7 +152,7 @@ namespace GStoreClient
                 });
                 return reply.Ok;
             }
-            catch (Grpc.Core.RpcException e)
+            catch (RpcException)
             {
                 Console.WriteLine("Connection failed to server " + server_id + " of partition " + partition_id);
             }
@@ -175,7 +174,8 @@ namespace GStoreClient
             Console.WriteLine("Server " + server_id + " stores the following objects:");
 
 
-            foreach ( var obj in reply.Objects) {
+            foreach (var obj in reply.Objects)
+            {
 
                 if (obj.IsMaster)
                     Console.WriteLine("Object " + obj.ObjectId + " with value '" + obj.Value + "' in partition " + obj.PartitionId + "(master for this partition).");
@@ -194,12 +194,12 @@ namespace GStoreClient
                     GStoreServerService.GStoreServerServiceClient server = serverMap[server_id].service;
                     try
                     {
-                        ListGlobalReply reply = server.ListGlobal(new ListGlobalRequest {PartitionId = pair.Key});
+                        ListGlobalReply reply = server.ListGlobal(new ListGlobalRequest { PartitionId = pair.Key });
                         foreach (var obj in reply.ObjDesc)
                             Console.WriteLine("Partition_id: " + obj.PartitionId + " , Object_id: " + obj.ObjectId);
                         break;
                     }
-                    catch (Grpc.Core.RpcException e)
+                    catch (RpcException)
                     {
                         Console.WriteLine("Connection failed to server " + server_id);
                     }

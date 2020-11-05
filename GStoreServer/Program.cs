@@ -3,7 +3,6 @@ using Grpc.Net.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,7 +69,7 @@ namespace gStoreServer
                     Console.WriteLine("\tAdded server " + request.ServersUrls[i] + " to local list of partition servers: " + request.PartitionName);
                     partitionServers[request.PartitionName].Add(new ServerStruct(server_url, openChannels[server_url]));
                 }
-                catch (Grpc.Core.RpcException e)
+                catch (RpcException)
                 {
                     Console.WriteLine("Connection failed to server " + request.ServersUrls[i]);
                 }
@@ -192,7 +191,7 @@ namespace gStoreServer
             foreach (var pair in serverObjects)
             {
                 _semaphore.WaitOne();
-                if(pair.Key.Item1 == partition_id)
+                if (pair.Key.Item1 == partition_id)
                     reply.ObjDesc.Add(new ObjectDescription { ObjectId = pair.Key.Item2, PartitionId = pair.Key.Item1 });
                 _semaphore.Release();
             }
@@ -261,7 +260,7 @@ namespace gStoreServer
                             reply = server.service.LockAsync(new LockRequest { });
                             pendingLocks.Add(reply);
                         }
-                        catch (Grpc.Core.RpcException e)
+                        catch (RpcException)
                         {
                             Console.WriteLine("\t\tConnection failed to server " + server.url);
                             if (pendingLocks.Contains(reply)) pendingLocks.Remove(reply);
@@ -292,7 +291,7 @@ namespace gStoreServer
                             });
                             pendingTasks.Add(reply);
                         }
-                        catch (Grpc.Core.RpcException e)
+                        catch (RpcException)
                         {
                             Console.WriteLine("Connection failed to server " + server.url);
                         }
