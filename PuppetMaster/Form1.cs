@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace PuppetMaster
@@ -39,7 +33,7 @@ namespace PuppetMaster
             {
                 string file = openFileDialog1.FileName;
                 int size = -1;
-                
+
                 try
                 {
                     string text = File.ReadAllText(file);
@@ -86,7 +80,7 @@ namespace PuppetMaster
         {
             puppetMaster.addComand(newCommand.Text);
             if (scriptBox.Lines.Length > 0 && scriptBox.Text[scriptBox.Text.Length - 1] != '\n')
-                    scriptBox.Text += "\r\n";
+                scriptBox.Text += "\r\n";
             scriptBox.Text += newCommand.Text + "\r\n";
             newCommand.Text = "";
             highlight_command(pos);
@@ -104,7 +98,7 @@ namespace PuppetMaster
             scriptBox.SelectionColor = Color.Green;
             scriptBox.Select(scriptBox.GetFirstCharIndexFromLine(position), currentCommand.Length);
             scriptBox.SelectionFont = new Font(scriptBox.Font, FontStyle.Bold);
-            
+
         }
         private void un_highlight_previous_command(int position)
         {
@@ -125,18 +119,18 @@ namespace PuppetMaster
 
         private void label2_Click(object sender, EventArgs e)
         {
-            
+
         }
 
         private void cont_button_Click(object sender, EventArgs e)
         {
-            if (pos < scriptBox.Lines.Length )
+            if (pos < scriptBox.Lines.Length)
             {
                 puppetMaster.runCommands();
                 un_highlight_previous_command(++pos);
                 pos = scriptBox.Lines.Length - 1;
             }
-            }
+        }
 
         private void label3_Click(object sender, EventArgs e)
         {

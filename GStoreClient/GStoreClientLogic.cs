@@ -1,19 +1,14 @@
 ﻿using Grpc.Core;
 using Grpc.Net.Client;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 public delegate void DelAddMsg(string s);
 
-namespace GStoreClient {
+namespace GStoreClient
+{
 
     struct ClientStruct
     {
@@ -27,27 +22,29 @@ namespace GStoreClient {
         }
     }
 
-    public class GStoreClient {
+    public class GStoreClient
+    {
         Queue<String> commandQueue = new Queue<String>();
         private GStoreServerService.GStoreServerServiceClient current_server;
         private string username;
         private string hostname;
         // dictionary with serverID as key and clientStruct
         private Dictionary<string, ClientStruct> serverMap =
-            new Dictionary<string,ClientStruct>();
+            new Dictionary<string, ClientStruct>();
         // dictionary with partitionID as key and list of serverID's
         private Dictionary<string, List<string>> partitionMap = new Dictionary<string, List<string>>();
 
-        public GStoreClient(String user, String host, String args ) {
+        public GStoreClient(String user, String host, String args)
+        {
             username = user;
             hostname = host;
 
             //partitions come in command line format: -p partition_id partition_master_id partition_master_url other_servers_id other_servers_url -p 
             //maybe it should not be here as it is command line logic
-  
+
             String[] partitions = args.Split("-p ", StringSplitOptions.RemoveEmptyEntries);
 
-            foreach ( var partition in partitions)
+            foreach (var partition in partitions)
             {
                 AddPartitionToDict(partition);
             }
@@ -63,9 +60,9 @@ namespace GStoreClient {
         }
 
         // receives arguments in the format: partition_master_id partition_master_url server2_id server2_url ....
-        private void  AddPartitionToDict(String servers)
+        private void AddPartitionToDict(String servers)
         {
-            String [] fields = servers.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            String[] fields = servers.Split(" ", StringSplitOptions.RemoveEmptyEntries);
             String partition_id = fields[0];
 
             partitionMap.Add(partition_id, new List<string>());
@@ -75,9 +72,9 @@ namespace GStoreClient {
                 String server_url = fields[i + 1];
 
                 partitionMap[partition_id].Add(server_id);
-                if(!serverMap.ContainsKey(server_id))
+                if (!serverMap.ContainsKey(server_id))
                     AddServerToDict(server_id, server_url);
-            }            
+            }
 
         }
 
@@ -94,12 +91,14 @@ namespace GStoreClient {
                 Console.Error.WriteLine("Error: Partition " + partition_id + " does not exist in the system");
                 return;
             }
-            try {
-                ReadValueReply reply = current_server.ReadValue(new ReadValueRequest {
+            try
+            {
+                ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
+                {
                     PartitionId = partition_id,
                     ObjectId = object_id,
                 });
-            
+
                 if (reply.Value.Equals("N/A"))
                 {
                     Console.WriteLine("Unable to fetch object " + object_id + " from current server");
@@ -121,11 +120,13 @@ namespace GStoreClient {
                         Console.Error.WriteLine("Error: Unable to locate server " + server_id);
                     }
                     if (reply.Value.Equals("N/A")) Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from given server");
-                    else Console.WriteLine("Read value " + reply.Value + " on partition " + partition_id + " on object " + object_id);
+                    else Console.WriteLine("Read value '" + reply.Value + "' on partition " + partition_id + " on object " + object_id);
                 }
-                    else Console.WriteLine("Read value " + reply.Value + " on partition " + partition_id + " on object " + object_id);
+                else Console.WriteLine("Read value " + reply.Value + " on partition " + partition_id + " on object " + object_id);
 
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine("Connection failed to server ");// + server_id + " of partition " + partition_id);
             }
         }
@@ -133,31 +134,34 @@ namespace GStoreClient {
         public bool WriteValue(
            string partition_id, string object_id, string value)
         {
-           //Assuming the replica master is the first element of the list  
+            //Assuming the replica master is the first element of the list  
             string server_id = partitionMap[partition_id].First();
 
             GStoreServerService.GStoreServerServiceClient master = serverMap[server_id].service;
             current_server = master;
-            Console.WriteLine(value);
             Console.WriteLine("Connecting to master replica with server_id " + server_id + " of partition " + partition_id);
             Console.WriteLine("Sending Write to partition " + partition_id + " on object " + object_id + " with value '" + value + "'");
 
-            try {
+            try
+            {
 
-                WriteValueReply reply = master.WriteValue(new WriteValueRequest {
+                WriteValueReply reply = master.WriteValue(new WriteValueRequest
+                {
                     PartitionId = partition_id,
                     ObjectId = object_id,
                     Value = value
                 });
                 return reply.Ok;
-            } catch(Exception e) {
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine("Connection failed to server " + server_id + " of partition " + partition_id);
             }
             return false;
-            
+
         }
 
-        public void ListServer( String server_id)
+        public void ListServer(String server_id)
         {
             if (!serverMap.ContainsKey(server_id))
             {
@@ -169,6 +173,7 @@ namespace GStoreClient {
             ListServerObjectsReply reply = server.ListServerObjects(new ListServerObjectsRequest { });
 
             Console.WriteLine("Server " + server_id + " stores the following objects:");
+
             foreach ( var obj in reply.Objects) {
 
                 if (obj.IsMaster)
@@ -181,29 +186,24 @@ namespace GStoreClient {
         public void ListGlobal()
         {
             List<String> masters = new List<String>();
-            foreach(var pair in partitionMap)
+            foreach (var pair in partitionMap)
             {
-                String master = pair.Value[0];
-
-                if (!masters.Contains(master))
-                    masters.Add(master);
-
-            }
-
-            foreach(String master in masters)
-            {
-                GStoreServerService.GStoreServerServiceClient server = serverMap[master].service;
-                try {
-                    ListGlobalReply reply = server.ListGlobal(new ListGlobalRequest { });
-                    foreach(var obj in reply.ObjDesc)
-                        Console.WriteLine("Partition_id: " + obj.PartitionId +" , Object_id: " + obj.ObjectId);
-                }
-                catch (Exception e) {
-                    Console.WriteLine("Connection failed to server " + master);
+                foreach (String server_id in pair.Value)
+                {
+                    GStoreServerService.GStoreServerServiceClient server = serverMap[server_id].service;
+                    try
+                    {
+                        ListGlobalReply reply = server.ListGlobal(new ListGlobalRequest { });
+                        foreach (var obj in reply.ObjDesc)
+                            Console.WriteLine("Partition_id: " + obj.PartitionId + " , Object_id: " + obj.ObjectId);
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Connection failed to server " + server_id);
+                    }
                 }
             }
-
-
         }
 
         public void readScriptFile(String file)
@@ -229,7 +229,8 @@ namespace GStoreClient {
             }
         }
 
-        public bool isEnd(String command){
+        public bool isEnd(String command)
+        {
             return command.Split(" ")[0] == "end-repeat";
         }
 
@@ -237,7 +238,8 @@ namespace GStoreClient {
         {
             return command.Split(" ")[0] == "begin-repeat";
         }
-        public void beginRepeat(int x,int line){
+        public void beginRepeat(int x, int line)
+        {
             List<String> block = new List<String>();
 
             //Repeating x times
@@ -309,21 +311,21 @@ namespace GStoreClient {
             int context = 0;
 
             if (!isCorrectRepeat())
-            { 
+            {
                 Console.Error.WriteLine("Syntax Error: Begin/End-repeat loop");
                 commandQueue.Clear();
-            } 
+            }
             foreach (var command in commandQueue)
             {
-                if(context == 0)
-                    runOperation(command,line);
+                if (context == 0)
+                    runOperation(command, line);
                 context += updateContext(command);
                 line++;
             }
             commandQueue.Clear();
         }
 
-        public void runOperation(string op,int line)
+        public void runOperation(string op, int line)
         {
             String partition_id, object_id, server_id;
             string[] args = op.Split(" ");
@@ -333,13 +335,16 @@ namespace GStoreClient {
                     partition_id = args[1];
                     object_id = args[2];
                     server_id = args[3];
+                    Console.WriteLine("Read request received");
                     ReadValue(partition_id, object_id, server_id);
                     break;
                 case "write":
                     partition_id = args[1];
                     object_id = args[2];
                     String value = op.Split('"')[1];
-                    WriteValue(partition_id, object_id, value);
+                    bool done = WriteValue(partition_id, object_id, value);
+                    if (done) Console.WriteLine("Value written!");
+                    else Console.Error.WriteLine("Error: Could not write given value");
                     break;
                 case "listServer":
                     server_id = args[1];
@@ -356,7 +361,7 @@ namespace GStoreClient {
                     System.Threading.Thread.Sleep(int.Parse(ms));
                     Console.WriteLine("Program resumed");
                     break;
-                case "begin-repeat":                                                                                                                                                                                                                                                                               
+                case "begin-repeat":
                     beginRepeat(int.Parse(args[1]), line);
                     break;
                 case "end-repeat":
@@ -373,7 +378,8 @@ namespace GStoreClient {
             System.Diagnostics.Debug.WriteLine("added command:", command);
         }
 
-        public void ServerShutdown(Server server) {
+        public void ServerShutdown(Server server)
+        {
             server.ShutdownAsync().Wait();
         }
     }
