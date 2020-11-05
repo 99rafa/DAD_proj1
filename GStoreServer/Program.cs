@@ -316,10 +316,20 @@ namespace gStoreServer
                         }
                     }
                 }
-
-                //wait for all WRITE SHARE responses
-                await Task.WhenAll(pendingTasks.Select(c => c.ResponseAsync));
-                Console.WriteLine("\tSharing writes completed");
+                try { 
+                    //wait for all WRITE SHARE responses
+                    await Task.WhenAll(pendingTasks.Select(c => c.ResponseAsync));
+                    Console.WriteLine("\tSharing writes completed");
+                }
+                catch (RpcException e) {
+                    Console.WriteLine("\t\tConnection failed to server, removing server");
+                    for (int i = 0; i < pendingLocks.Count(); i++) {
+                        if (pendingLocks[i].ResponseAsync.Exception != null) {
+                            Console.WriteLine("\t\tRemoving server: " + partitionServers[i + 1].url); //i+1 because the master server is also in the partitionServers list
+                            puppetService.removeServer(partitionServers[i + 1].url);
+                        }
+                    }
+                }
                 Console.WriteLine("Write in partition completed");
             }
             finally
