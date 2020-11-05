@@ -170,7 +170,7 @@ namespace gStoreServer
     // GStoreServerServiceBase is the generated base implementation of the service
     public class ServerService : GStoreServerService.GStoreServerServiceBase
     {
-        private GrpcChannel channel;
+
         public PuppetServerService puppetService;
 
         private Dictionary<Tuple<String, String>, String> serverObjects = new Dictionary<Tuple<String, String>, String>();
@@ -321,7 +321,7 @@ namespace gStoreServer
                     await Task.WhenAll(pendingTasks.Select(c => c.ResponseAsync));
                     Console.WriteLine("\tSharing writes completed");
                 }
-                catch (RpcException e) {
+                catch (RpcException) {
                     Console.WriteLine("\t\tConnection failed to server, removing server");
                     for (int i = 0; i < pendingLocks.Count(); i++) {
                         if (pendingLocks[i].ResponseAsync.Exception != null) {
