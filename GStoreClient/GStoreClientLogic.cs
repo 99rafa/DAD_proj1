@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 
 public delegate void DelAddMsg(string s);
 
@@ -125,7 +126,7 @@ namespace GStoreClient
                 else Console.WriteLine("Read value " + reply.Value + " on partition " + partition_id + " on object " + object_id);
 
             }
-            catch (Exception e)
+            catch (Grpc.Core.RpcException e)
             {
                 Console.WriteLine("Connection failed to server ");// + server_id + " of partition " + partition_id);
             }
@@ -144,7 +145,6 @@ namespace GStoreClient
 
             try
             {
-
                 WriteValueReply reply = master.WriteValue(new WriteValueRequest
                 {
                     PartitionId = partition_id,
@@ -153,7 +153,7 @@ namespace GStoreClient
                 });
                 return reply.Ok;
             }
-            catch (Exception e)
+            catch (Grpc.Core.RpcException e)
             {
                 Console.WriteLine("Connection failed to server " + server_id + " of partition " + partition_id);
             }
@@ -173,6 +173,7 @@ namespace GStoreClient
             ListServerObjectsReply reply = server.ListServerObjects(new ListServerObjectsRequest { });
 
             Console.WriteLine("Server " + server_id + " stores the following objects:");
+
 
             foreach ( var obj in reply.Objects) {
 
@@ -198,7 +199,7 @@ namespace GStoreClient
                             Console.WriteLine("Partition_id: " + obj.PartitionId + " , Object_id: " + obj.ObjectId);
                         break;
                     }
-                    catch (Exception e)
+                    catch (Grpc.Core.RpcException e)
                     {
                         Console.WriteLine("Connection failed to server " + server_id);
                     }
