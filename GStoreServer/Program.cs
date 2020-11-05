@@ -282,7 +282,7 @@ namespace gStoreServer
                     await Task.WhenAll(pendingLocks.Select(c => c.ResponseAsync));
                     Console.WriteLine("\tLock requests completed");
                 }
-                catch (RpcException e) {
+                catch (RpcException) {
                     Console.WriteLine("\t\tConnection failed to server, removing server");
                     for(int i=0; i<pendingLocks.Count(); i++) {
                         if(pendingLocks[i].ResponseAsync.Exception != null) {

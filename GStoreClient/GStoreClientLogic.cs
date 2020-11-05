@@ -169,18 +169,26 @@ namespace GStoreClient
             }
             GStoreServerService.GStoreServerServiceClient server = serverMap[server_id].service;
 
-            ListServerObjectsReply reply = server.ListServerObjects(new ListServerObjectsRequest { });
-
-            Console.WriteLine("Server " + server_id + " stores the following objects:");
-
-
-            foreach (var obj in reply.Objects)
+            try
             {
+                ListServerObjectsReply reply = server.ListServerObjects(new ListServerObjectsRequest { });
 
-                if (obj.IsMaster)
-                    Console.WriteLine("Object " + obj.ObjectId + " with value '" + obj.Value + "' in partition " + obj.PartitionId + "(master for this partition).");
-                else
-                    Console.WriteLine("Object " + obj.ObjectId + " with value " + obj.Value + " in partition " + obj.PartitionId);
+                Console.WriteLine("Server " + server_id + " stores the following objects:");
+
+
+                foreach (var obj in reply.Objects)
+                {
+
+                    if (obj.IsMaster)
+                        Console.WriteLine("Object " + obj.ObjectId + " with value '" + obj.Value + "' in partition " + obj.PartitionId + "(master for this partition).");
+                    else
+                        Console.WriteLine("Object " + obj.ObjectId + " with value " + obj.Value + " in partition " + obj.PartitionId);
+                }
+            }
+            catch (RpcException)
+            {
+                Console.WriteLine("Connection failed to server " + server_id);
+
             }
         }
 
