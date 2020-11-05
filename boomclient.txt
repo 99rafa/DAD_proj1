@@ -1,4 +1,0 @@
-begin-repeat 10
-write part obj$i "Value$i"
-end-repeat
-listGlobal
