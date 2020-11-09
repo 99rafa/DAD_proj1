@@ -26,6 +26,7 @@ namespace GStoreClient
     {
         Queue<String> commandQueue = new Queue<String>();
         private GStoreServerService.GStoreServerServiceClient current_server;
+        private String current_server_id;
         private string username;
         private string hostname;
         // dictionary with serverID as key and clientStruct
@@ -82,9 +83,25 @@ namespace GStoreClient
         public void ReadValue(
            string partition_id, string object_id, string server_id)
         {
-            if (current_server == null) current_server = serverMap[server_id].service;
 
-            Console.WriteLine("Connecting to current server...");
+            if (current_server == null) {
+                // when there is no current server attached and the server_id argument is -1
+                // it will try to connect to the partition master
+                if (server_id.Equals("-1"))
+                {
+                    String partition_master_id = partitionMap[partition_id].First();
+                    current_server = serverMap[server_id].service;
+                    current_server_id = partition_master_id;
+                }
+
+                else
+                {
+                    current_server = serverMap[server_id].service;
+                    current_server_id = server_id;
+                }
+            }
+
+            Console.WriteLine("Connecting to server " + current_server_id + "...");
 
             if (!partitionMap.ContainsKey(partition_id))
             {
@@ -101,9 +118,9 @@ namespace GStoreClient
 
                 if (reply.Value.Equals("N/A"))
                 {
-                    Console.WriteLine("Unable to fetch object " + object_id + " from current server");
+                    Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from current server");
                     if (server_id == "-1") return;
-                    Console.WriteLine("Trying server " + server_id + "...");
+                    Console.WriteLine("Connecting to server " + server_id + "...");
                     if (serverMap.ContainsKey(server_id))
                     {
                         GStoreServerService.GStoreServerServiceClient new_server = serverMap[server_id].service;
@@ -114,6 +131,7 @@ namespace GStoreClient
                             ObjectId = object_id,
                         });
                         current_server = new_server;
+                        current_server_id = server_id;
                     }
                     else
                     {
@@ -127,7 +145,7 @@ namespace GStoreClient
             }
             catch (RpcException)
             {
-                Console.WriteLine("Connection failed to server ");// + server_id + " of partition " + partition_id);
+                Console.Error.WriteLine("Error: Connection failed to server ");// + server_id + " of partition " + partition_id);
             }
         }
 
@@ -139,8 +157,9 @@ namespace GStoreClient
 
             GStoreServerService.GStoreServerServiceClient master = serverMap[server_id].service;
             current_server = master;
+            current_server_id = server_id;
             Console.WriteLine("Connecting to master replica with server_id " + server_id + " of partition " + partition_id);
-            Console.WriteLine("Sending Write to partition " + partition_id + " on object " + object_id + " with value '" + value + "'");
+            Console.WriteLine("Sending Write operation to partition " + partition_id + " on object " + object_id + " with value '" + value + "'");
 
             try
             {
@@ -154,7 +173,7 @@ namespace GStoreClient
             }
             catch (RpcException)
             {
-                Console.WriteLine("Connection failed to server " + server_id + " of partition " + partition_id);
+                Console.Error.WriteLine("Error: Connection failed to server " + server_id + " of partition " + partition_id);
             }
             return false;
 
@@ -187,7 +206,7 @@ namespace GStoreClient
             }
             catch (RpcException)
             {
-                Console.WriteLine("Connection failed to server " + server_id);
+                Console.Error.WriteLine("Error: Connection failed to server " + server_id);
 
             }
         }
@@ -209,7 +228,7 @@ namespace GStoreClient
                     }
                     catch (RpcException)
                     {
-                        Console.WriteLine("Connection failed to server " + server_id);
+                        Console.Error.WriteLine("Error: Connection failed to server " + server_id);
                     }
                 }
             }
@@ -351,21 +370,25 @@ namespace GStoreClient
                     partition_id = args[1];
                     object_id = args[2];
                     String value = op.Split('"')[1];
+                    Console.WriteLine("Write request received");
                     bool done = WriteValue(partition_id, object_id, value);
                     if (done) Console.WriteLine("Value written!");
                     else Console.Error.WriteLine("Error: Could not write given value");
                     break;
                 case "listServer":
                     server_id = args[1];
+                    Console.WriteLine("List Server request received");
                     Console.WriteLine("Reading all objects from server " + server_id);
                     ListServer(server_id);
                     break;
                 case "listGlobal":
+                    Console.WriteLine("List Global request received");
                     Console.WriteLine("Reading all objects from the system");
                     ListGlobal();
                     break;
                 case "wait":
                     String ms = args[1];
+                    Console.WriteLine("Wait request received");
                     Console.WriteLine("Delaying execution for " + ms + " milliseconds");
                     System.Threading.Thread.Sleep(int.Parse(ms));
                     Console.WriteLine("Program resumed");
