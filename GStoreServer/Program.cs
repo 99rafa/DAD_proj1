@@ -246,15 +246,17 @@ namespace gStoreServer
             System.Threading.Thread.Sleep(RandomDelay());
 
             Console.WriteLine("Received write request for partition " + request.PartitionId + " on objet " + request.ObjectId + " with value " + request.Value);
-            //Check if this server is master of partition
-            if (!puppetService.serverIsMaster(request.PartitionId))
-            {
-                Console.WriteLine("This server is not the master of partition:" + request.PartitionId);
-                return await Task.FromResult(new WriteValueReply
+
+            //LOCK
+            List<ServerStruct> serverPartitions = this.puppetService.partitionServers[request.PartitionId];
+            Monitor.Enter(serverPartitions);
+            try {
+                //Check if this server is master of partition
+                if (!puppetService.serverIsMaster(request.PartitionId))
                 {
-                    Ok = false
-                });
-            }
+                    removeCurrentMaster(request.PartitionId);
+                }
+            } finally { Monitor.Exit(serverPartitions); }
 
 
             _semaphore.WaitOne();
@@ -406,6 +408,12 @@ namespace gStoreServer
             {
                 Value = value
             });
+        }
+
+        public void removeCurrentMaster(String partition)
+        {
+           this.puppetService.partitionServers[partition].Remove(this.puppetService.partitionServers[partition].First());
+
         }
     }
 

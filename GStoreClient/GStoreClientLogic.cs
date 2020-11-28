@@ -75,16 +75,17 @@ namespace GStoreClient
                 partitionMap[partition_id].Add(server_id);
                 if (!serverMap.ContainsKey(server_id))
                     AddServerToDict(server_id, server_url);
-            }
+       }
+         }
 
-        }
-
+   
 
         public void ReadValue(
            string partition_id, string object_id, string server_id)
         {
 
-            if (current_server == null) {
+            if (current_server == null)
+            {
                 // when there is no current server attached and the server_id argument is -1
                 // it will try to connect to the partition master
                 if (server_id.Equals("-1"))
@@ -93,14 +94,12 @@ namespace GStoreClient
                     current_server = serverMap[server_id].service;
                     current_server_id = partition_master_id;
                 }
-
                 else
                 {
                     current_server = serverMap[server_id].service;
                     current_server_id = server_id;
                 }
             }
-
             Console.WriteLine("Connecting to server " + current_server_id + "...");
 
             if (!partitionMap.ContainsKey(partition_id))
@@ -152,8 +151,11 @@ namespace GStoreClient
         public bool WriteValue(
            string partition_id, string object_id, string value)
         {
-            //Assuming the replica master is the first element of the list  
-            string server_id = partitionMap[partition_id].First();
+            bool success = false;
+            while (!success)
+            {
+                //Assuming the replica master is the first element of the list  
+                string server_id = partitionMap[partition_id].First();
 
             GStoreServerService.GStoreServerServiceClient master = serverMap[server_id].service;
             current_server = master;
@@ -161,19 +163,25 @@ namespace GStoreClient
             Console.WriteLine("Connecting to master replica with server_id " + server_id + " of partition " + partition_id);
             Console.WriteLine("Sending Write operation to partition " + partition_id + " on object " + object_id + " with value '" + value + "'");
 
-            try
-            {
-                WriteValueReply reply = master.WriteValue(new WriteValueRequest
+                try
                 {
-                    PartitionId = partition_id,
-                    ObjectId = object_id,
-                    Value = value
-                });
-                return reply.Ok;
-            }
-            catch (RpcException)
-            {
-                Console.Error.WriteLine("Error: Connection failed to server " + server_id + " of partition " + partition_id);
+                    WriteValueReply reply = master.WriteValue(new WriteValueRequest
+                    {
+                        PartitionId = partition_id,
+                        ObjectId = object_id,
+                        Value = value
+                    });
+                    success = true;
+                    return reply.Ok;
+                }
+                catch (RpcException)
+                {
+                    Console.Error.WriteLine("Error: Connection failed to server " + server_id + " of partition " + partition_id);
+                    removeCurrentMaster(partition_id);
+                    Console.Out.WriteLine("Reconnecting to server " + this.partitionMap[partition_id].First());
+                   
+
+                }
             }
             return false;
 
@@ -317,6 +325,12 @@ namespace GStoreClient
                 return 1;
             else
                 return 0;
+        }
+
+        public void removeCurrentMaster(String partition)
+        {
+            this.partitionMap[partition].Remove(this.partitionMap[partition].First());
+            
         }
 
         public bool isCorrectRepeat()
