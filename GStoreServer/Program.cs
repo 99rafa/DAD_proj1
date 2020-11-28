@@ -241,8 +241,10 @@ namespace gStoreServer
 
         public async override Task<WriteValueReply> WriteValue(WriteValueRequest request, ServerCallContext context)
         {
+            Console.WriteLine("OLA");
 
             while (puppetService.frozen) ;
+
             System.Threading.Thread.Sleep(RandomDelay());
 
             Console.WriteLine("Received write request for partition " + request.PartitionId + " on objet " + request.ObjectId + " with value " + request.Value);
@@ -250,6 +252,7 @@ namespace gStoreServer
             //LOCK
             List<ServerStruct> serverPartitions = this.puppetService.partitionServers[request.PartitionId];
             Monitor.Enter(serverPartitions);
+            
             try {
                 //Check if this server is master of partition
                 if (!puppetService.serverIsMaster(request.PartitionId))
@@ -257,9 +260,11 @@ namespace gStoreServer
                     removeCurrentMaster(request.PartitionId);
                 }
             } finally { Monitor.Exit(serverPartitions); }
-
+            Console.WriteLine("Deleted last master");
 
             _semaphore.WaitOne();
+            Console.WriteLine("Semaphor");
+
             try
             {
                 serverObjects[new Tuple<string, string>(request.PartitionId, request.ObjectId)] = request.Value;
@@ -273,11 +278,12 @@ namespace gStoreServer
                     {
                         Console.WriteLine("\t\tSending lock request to " + server.url);
                         AsyncUnaryCall<LockReply> reply = server.service.LockAsync(new LockRequest { });
-                        pendingLocks.Add(reply);
+                        pendingLocks.Add(reply); 
                         
                     }
 
                 }
+
 
                 try {
                     //wait for all LOCK responses

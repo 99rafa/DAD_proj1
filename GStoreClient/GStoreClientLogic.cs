@@ -152,7 +152,7 @@ namespace GStoreClient
            string partition_id, string object_id, string value)
         {
             bool success = false;
-            while (!success)
+            while (!success && partitionMap[partition_id].Count != 0)
             {
                 //Assuming the replica master is the first element of the list  
                 string server_id = partitionMap[partition_id].First();
@@ -172,13 +172,17 @@ namespace GStoreClient
                         Value = value
                     });
                     success = true;
+                    Console.WriteLine("CHEGUEI");
                     return reply.Ok;
                 }
                 catch (RpcException)
                 {
+
+
                     Console.Error.WriteLine("Error: Connection failed to server " + server_id + " of partition " + partition_id);
                     removeCurrentMaster(partition_id);
-                    Console.Out.WriteLine("Reconnecting to server " + this.partitionMap[partition_id].First());
+                    if(partitionMap[partition_id].Count != 0)
+                        Console.Out.WriteLine("Reconnecting to server " + this.partitionMap[partition_id].First());
                    
 
                 }
@@ -329,8 +333,13 @@ namespace GStoreClient
 
         public void removeCurrentMaster(String partition)
         {
-            this.partitionMap[partition].Remove(this.partitionMap[partition].First());
-            
+            if (this.partitionMap[partition].Count != 0)
+                this.partitionMap[partition].Remove(this.partitionMap[partition].First());
+            else
+            {
+                Console.Error.WriteLine("Error: No more servers available in partition");
+                
+            }
         }
 
         public bool isCorrectRepeat()
