@@ -252,8 +252,8 @@ namespace gStoreServer
             Monitor.Enter(serverPartitions);
             try {
                 //Check if this server is master of partition
-                if (!puppetService.serverIsMaster(request.PartitionId))
-                {
+                if (!puppetService.serverIsMaster(request.PartitionId)) {
+                    Console.WriteLine("\t\t Receiving write request when this server is not the leader. Becoming leader");
                     removeCurrentMaster(request.PartitionId);
                 }
             } finally { Monitor.Exit(serverPartitions); }
@@ -412,8 +412,22 @@ namespace gStoreServer
 
         public void removeCurrentMaster(String partition)
         {
-           this.puppetService.partitionServers[partition].Remove(this.puppetService.partitionServers[partition].First());
+            Console.WriteLine("\n\tprinting Current Masters");
+            List<ServerStruct> p = puppetService.partitionServers[partition];
+            for (int i=0; i < p.Count(); i++) {
+                Console.WriteLine(i + " : " + p[i].url);
+            }
+            Console.WriteLine("Deleting");
 
+            while (puppetService.partitionServers[partition].First().url != puppetService.url) {
+                puppetService.partitionServers[partition].Remove(this.puppetService.partitionServers[partition].First());
+            }
+
+
+            for (int i = 0; i < p.Count(); i++) {
+                Console.WriteLine(i + " : " + p[i].url);
+            }
+            Console.WriteLine("End Print");
         }
     }
 

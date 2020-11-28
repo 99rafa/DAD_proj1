@@ -157,11 +157,11 @@ namespace GStoreClient
                 //Assuming the replica master is the first element of the list  
                 string server_id = partitionMap[partition_id].First();
 
-            GStoreServerService.GStoreServerServiceClient master = serverMap[server_id].service;
-            current_server = master;
-            current_server_id = server_id;
-            Console.WriteLine("Connecting to master replica with server_id " + server_id + " of partition " + partition_id);
-            Console.WriteLine("Sending Write operation to partition " + partition_id + " on object " + object_id + " with value '" + value + "'");
+                GStoreServerService.GStoreServerServiceClient master = serverMap[server_id].service;
+                current_server = master;
+                current_server_id = server_id;
+                Console.WriteLine("Connecting to master replica with server_id " + server_id + " of partition " + partition_id);
+                Console.WriteLine("Sending Write operation to partition " + partition_id + " on object " + object_id + " with value '" + value + "'");
 
                 try
                 {
@@ -171,6 +171,7 @@ namespace GStoreClient
                         ObjectId = object_id,
                         Value = value
                     });
+                    Console.WriteLine("Write successfull on server " + server_id);
                     success = true;
                     return reply.Ok;
                 }
@@ -179,8 +180,6 @@ namespace GStoreClient
                     Console.Error.WriteLine("Error: Connection failed to server " + server_id + " of partition " + partition_id);
                     removeCurrentMaster(partition_id);
                     Console.Out.WriteLine("Reconnecting to server " + this.partitionMap[partition_id].First());
-                   
-
                 }
             }
             return false;
@@ -330,7 +329,6 @@ namespace GStoreClient
         public void removeCurrentMaster(String partition)
         {
             this.partitionMap[partition].Remove(this.partitionMap[partition].First());
-            
         }
 
         public bool isCorrectRepeat()
@@ -371,6 +369,7 @@ namespace GStoreClient
         {
             String partition_id, object_id, server_id;
             string[] args = op.Split(" ");
+            Console.WriteLine("");
             switch (args[0])
             {
                 case "read":
@@ -404,7 +403,7 @@ namespace GStoreClient
                     String ms = args[1];
                     Console.WriteLine("Wait request received");
                     Console.WriteLine("Delaying execution for " + ms + " milliseconds");
-                    System.Threading.Thread.Sleep(int.Parse(ms));
+                    System.Threading.Tasks.Task.Delay(int.Parse(ms)).Wait();
                     Console.WriteLine("Program resumed");
                     break;
                 case "begin-repeat":
