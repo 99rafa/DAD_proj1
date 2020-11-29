@@ -99,7 +99,7 @@ namespace GStoreClient
                         int index = 0;
                         while (alreadyTried.Contains(current_server_id))
                         {
-                            if (initialCount<= alreadyTried.Count)
+                            if (initialCount == alreadyTried.Count)
                             {
                                 Console.Error.WriteLine("Error: Could not retrieve object " + object_id + " from the system. Aborting");
                                 return;
