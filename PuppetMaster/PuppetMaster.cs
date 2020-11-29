@@ -90,7 +90,7 @@ namespace PuppetMaster
                         runPendingCommands();
                     }
                     executeCommand(command);
-                    System.Diagnostics.Debug.WriteLine("executing command:", command);
+                    System.Diagnostics.Debug.WriteLine("executing command:" +  command + "  " + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds());
                 }
 
             }
@@ -125,7 +125,7 @@ namespace PuppetMaster
                     runPendingCommands();
                 }
                 executeCommand(command);
-                System.Diagnostics.Debug.WriteLine("executing command:", command);
+                System.Diagnostics.Debug.WriteLine("executing command: " + command + " " + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds());
             }
 
         }
@@ -167,6 +167,7 @@ namespace PuppetMaster
 
         public void Crash(String id)
         {
+
             if (servers.ContainsKey(id))
                 servers[id].service.CrashAsync(new CrashRequest { });
             else
