@@ -175,7 +175,7 @@ namespace GStoreClient
                     success = true;
                     return reply.Ok;
                 }
-                catch (RpcException)
+                catch (AccessViolationException)
                 {
                     Console.Error.WriteLine("Error: Connection failed to server " + server_id + " of partition " + partition_id);
                     removeCurrentMaster(partition_id);

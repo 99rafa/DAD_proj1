@@ -7,6 +7,7 @@ service GStoreServerService {
   rpc ListGlobal (ListGlobalRequest) returns (ListGlobalReply);
   rpc ShareWrite (ShareWriteRequest) returns (ShareWriteReply);
   rpc Lock (LockRequest) returns (LockReply);
+  rpc Gossip (GossipRequest) returns (GossipReply);
 }
 
 message ReadValueRequest {
@@ -74,3 +75,19 @@ message ShareWriteReply {
 	bool ok = 1;
 }
 
+message GossipRequest {
+	repeated timestampValue timestamp = 1;
+}
+
+message GossipReply {
+	bool ok = 1;
+}
+
+message timestampValue{
+	string partition_id = 1;
+	string object_id = 2;
+	int32 server_id = 3;
+	int32 object_version = 4;
+	
+	string object_value = 5;
+}

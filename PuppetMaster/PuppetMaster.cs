@@ -42,6 +42,7 @@ namespace PuppetMaster
         string replication_factor;
         List<String> pendingComands = new List<String>();
         bool runPending = false;
+        int currentServerCounter = 0;
 
 
         public PuppetMaster()
@@ -224,7 +225,7 @@ namespace PuppetMaster
                         addServerToDict(server_id, url);
                     //Path to server .exe , maybe it should be the "release" version instead of "debug"
                     process.StartInfo.FileName = "..\\..\\..\\..\\GStoreServer\\bin\\Debug\\netcoreapp3.1\\GStoreServer.exe";
-                    process.StartInfo.Arguments = server_id + " " + url + " " + min_delay + " " + max_delay;
+                    process.StartInfo.Arguments = server_id + " " + url + " " + min_delay + " " + max_delay + " " + ++currentServerCounter;
                     process.Start();
                     break;
                 case "Partition":
