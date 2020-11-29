@@ -264,6 +264,7 @@ namespace gStoreServer
         {
 
             while (puppetService.frozen) ;
+
             System.Threading.Thread.Sleep(RandomDelay());
 
             Console.WriteLine("\nReceived write request for partition " + request.PartitionId + " on objet " + request.ObjectId + " with value " + request.Value);
@@ -281,6 +282,8 @@ namespace gStoreServer
                     removeCurrentMaster(request.PartitionId);
                 }
 
+            _semaphore.WaitOne();
+            Console.WriteLine("Semaphor");
 
                 //Change current value
                 serverObjects[new Tuple<string, string>(request.PartitionId, request.ObjectId)] = request.Value;

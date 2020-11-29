@@ -168,6 +168,7 @@ namespace PuppetMaster
 
         public void Crash(String id)
         {
+
             if (servers.ContainsKey(id))
                 servers[id].service.CrashAsync(new CrashRequest { });
             else
