@@ -28,6 +28,9 @@ namespace gStoreServer
         public Dictionary<String, List<ServerStruct>> partitionServers = new Dictionary<String, List<ServerStruct>>();
         public Dictionary<String, GStoreServerService.GStoreServerServiceClient> openChannels = new Dictionary<String, GStoreServerService.GStoreServerServiceClient>();
 
+        // <partition_name, integer_value> Each value is used as a lock for that partition
+        public Dictionary<string, ReaderWriterLockSlim> partitionLocks = new Dictionary<string, ReaderWriterLockSlim>();
+
         public bool crashed = false;
         public bool frozen = false;
 
@@ -44,6 +47,7 @@ namespace gStoreServer
             if (!partitionServers.ContainsKey(request.PartitionName))
             {
                 partitionServers.Add(request.PartitionName, new List<ServerStruct>());
+                partitionLocks.Add(request.PartitionName, new ReaderWriterLockSlim());
             }
             else
             {
@@ -180,12 +184,11 @@ namespace gStoreServer
         //timestamp -  key: <partition_id, object_id>      value: <server_id, object_version>
         private Dictionary<Tuple<String, String>, Tuple<int, int>> timestamp = new Dictionary<Tuple<String, String>, Tuple<int, int>>();
 
-        private Semaphore _semaphore = new Semaphore(1, 1);
+        //private Semaphore _semaphore = new Semaphore(1, 1);
 
         int min_delay, max_delay, server_int_id;
 
-        // <partition_name, integer_value> Each value is used as a lock for that partition
-        private Dictionary<string, int> partitionLocks;
+
 
         public ServerService(PuppetServerService p, int min, int max, int serv_int)
         {
@@ -193,10 +196,6 @@ namespace gStoreServer
             min_delay = min;
             max_delay = max;
             server_int_id = serv_int;
-
-            foreach (var item in puppetService.partitionServers) {
-                partitionLocks.Add(item.Key, 0);
-            }
         }
 
 
@@ -218,10 +217,10 @@ namespace gStoreServer
             String partition_id = request.PartitionId;
             foreach (var pair in serverObjects)
             {
-                _semaphore.WaitOne();
+                //TODO LOCK
                 if (pair.Key.Item1 == partition_id)
                     reply.ObjDesc.Add(new ObjectDescription { ObjectId = pair.Key.Item2, PartitionId = pair.Key.Item1 });
-                _semaphore.Release();
+                
             }
 
             return Task.FromResult(reply);
@@ -235,7 +234,7 @@ namespace gStoreServer
             ListServerObjectsReply reply = new ListServerObjectsReply { };
             foreach (var pair in serverObjects)
             {
-                _semaphore.WaitOne();
+                //TODO LOCK
                 String obj_id = pair.Key.Item2;
                 String part_id = pair.Key.Item1;
                 String val = pair.Value;
@@ -247,7 +246,6 @@ namespace gStoreServer
                     Value = val,
                     IsMaster = puppetService.serverIsMaster(part_id)
                 });
-                _semaphore.Release();
             }
             return Task.FromResult(reply);
         }
@@ -271,8 +269,10 @@ namespace gStoreServer
 
             //LOCK
             Console.WriteLine("Contains " + this.puppetService.partitionServers.ContainsKey(request.PartitionId));
-            List<ServerStruct> partitionLock = this.puppetService.partitionServers[request.PartitionId];
-            Monitor.Enter(partitionLock);
+            //List<ServerStruct> partitionLock = this.puppetService.partitionServers[request.PartitionId];
+            //Monitor.Enter(partitionLock);
+            ReaderWriterLockSlim partitionLock = this.puppetService.partitionLocks[request.PartitionId];
+            partitionLock.EnterWriteLock();
 
             int newVersion = 1;
             try {
@@ -281,9 +281,6 @@ namespace gStoreServer
                     Console.WriteLine("\t\t Receiving write request when this server is not the leader. Becoming leader");
                     removeCurrentMaster(request.PartitionId);
                 }
-
-            _semaphore.WaitOne();
-            Console.WriteLine("Semaphor");
 
                 //Change current value
                 serverObjects[new Tuple<string, string>(request.PartitionId, request.ObjectId)] = request.Value;
@@ -336,11 +333,12 @@ namespace gStoreServer
                     }
                 }
                 //Wait for answers?
-                
 
 
 
-                } finally { Monitor.Exit(partitionLock); }
+
+            }
+            finally { partitionLock.ExitWriteLock(); }//Monitor.Exit(partitionLock); }
 
             /*
 
@@ -367,7 +365,7 @@ namespace gStoreServer
             });
         }
 
-        public override Task<ShareWriteReply> ShareWrite(ShareWriteRequest request, ServerCallContext context)
+        /*public override Task<ShareWriteReply> ShareWrite(ShareWriteRequest request, ServerCallContext context)
         {
 
             while (puppetService.frozen) ;
@@ -391,7 +389,7 @@ namespace gStoreServer
                 Ok = true
             });
         }
-
+        */
         public override Task<GossipReply> Gossip(GossipRequest request, ServerCallContext context) {
             //List<ServerStruct> partitionLock = this.puppetService.partitionServers[request.Timestamp[0].PartitionId];
             //Monitor.Enter(partitionLock);
@@ -399,8 +397,10 @@ namespace gStoreServer
             foreach(timestampValue ts in request.Timestamp) {
                 Tuple<String, String> key = new Tuple<String, String>(ts.PartitionId, ts.ObjectId);
 
-                List<ServerStruct> partitionLock = this.puppetService.partitionServers[ts.PartitionId];
-                Monitor.Enter(partitionLock);
+                //List<ServerStruct> partitionLock = this.puppetService.partitionServers[ts.PartitionId];
+                //Monitor.Enter(partitionLock);
+                ReaderWriterLockSlim partitionLock = this.puppetService.partitionLocks[ts.PartitionId];
+                partitionLock.EnterWriteLock();
                 Console.WriteLine(" Locking ");
                 try {
                     Console.WriteLine("Reading Gossip2 with value" + ts.ObjectValue + "  " + (!this.timestamp.ContainsKey(key)));
@@ -414,7 +414,8 @@ namespace gStoreServer
                 }
                 finally {
                    Console.WriteLine(" Unlocking ");
-                   Monitor.Exit(partitionLock);
+                    //Monitor.Exit(partitionLock);
+                    partitionLock.ExitWriteLock();
                 }
             }
             Console.WriteLine("New timestamp table");
@@ -425,7 +426,7 @@ namespace gStoreServer
                 Ok = true
             });
         }
-
+        /*
         public override Task<LockReply> Lock(LockRequest request, ServerCallContext context)
         {
             //Lock
@@ -439,7 +440,7 @@ namespace gStoreServer
             {
                 Ok = true
             });
-        }
+        }*/
 
         public override Task<ReadValueReply> ReadValue(ReadValueRequest request, ServerCallContext context)
         {
@@ -449,20 +450,28 @@ namespace gStoreServer
 
             Console.WriteLine("Received Read request ");
             string value;
-            _semaphore.WaitOne();
+            int server_index=-1, version=-1;
             Tuple<string, string> key = new Tuple<string, string>(request.PartitionId, request.ObjectId);
-            if (serverObjects.ContainsKey(key))
-            {
+
+            //Lock partition
+            ReaderWriterLockSlim partitionLock = this.puppetService.partitionLocks[request.PartitionId];
+            partitionLock.EnterReadLock();
+
+            if (serverObjects.ContainsKey(key)){
                 value = serverObjects[key];
-            }
-            else
-            {
+                server_index = timestamp[key].Item1;
+                version = timestamp[key].Item2;
+            } else {
                 value = "N/A";
             }
-            _semaphore.Release();
+
+            partitionLock.ExitReadLock();
+
             return Task.FromResult(new ReadValueReply
             {
-                Value = value
+                Value = value,
+                ServerIndex = server_index,
+                Version = version
             });
         }
 

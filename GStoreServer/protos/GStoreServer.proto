@@ -17,6 +17,8 @@ message ReadValueRequest {
 }
 message ReadValueReply {
 	string value = 1;
+	int32 version = 2;
+	int32 server_index = 3;
 }
 
 message WriteValueRequest {

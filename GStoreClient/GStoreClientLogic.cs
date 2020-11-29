@@ -206,38 +206,34 @@ namespace GStoreClient
                         PartitionId = partition_id,
                         ObjectId = object_id,
                     });
-                    Console.WriteLine(reply.Value);
-                    String value = reply.Value;
-                    Tuple<String, String> part_obj_tup = new Tuple<String, String>(partition_id, object_id);
-                    if (!timestamp.ContainsKey(part_obj_tup))
-                    {
-                        timestamp.Add(part_obj_tup, new Tuple<int, int>(reply.ServerIndex, reply.Version));
-                        responseCache.addEntry(new Tuple<string, int, string, string>(partition_id, reply.ServerIndex, object_id, value));
-                    }
-                    else
-                    {
-                        int serverIndex = timestamp[part_obj_tup].Item1;
-                        int version = timestamp[part_obj_tup].Item1;
-                        //Server outdated get cache value
-                        if (version >= reply.Version)
-                        {
-                            Console.WriteLine("Server outdated, reading from cache!");
-                            value = responseCache.getCorrectValue(new Tuple<string, int, string, string>(partition_id, serverIndex, object_id, value));
-                        }
-                        else
-                        {
-                            responseCache.addEntry(new Tuple<string, int, string, string>(partition_id, serverIndex, object_id, value));
-                            timestamp[part_obj_tup] = new Tuple<int, int>(reply.ServerIndex, reply.Version);
-                        }
-                    }
 
-                    if (value.Equals("N/A"))
+                    if (reply.Value.Equals("N/A"))
                     {
                         Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from current server");
                         alreadyTried.Add(current_server_id);
                     }
                     else
                     {
+                        Console.WriteLine(reply.Value);
+                        String value = reply.Value;
+                        Tuple<String, String> part_obj_tup = new Tuple<String, String>(partition_id, object_id);
+                        if (!timestamp.ContainsKey(part_obj_tup)) {
+                            timestamp.Add(part_obj_tup, new Tuple<int, int>(reply.ServerIndex, reply.Version));
+                            responseCache.addEntry(new Tuple<string, int, string, string>(partition_id, reply.ServerIndex, object_id, value));
+                        }
+                        else {
+                            int serverIndex = timestamp[part_obj_tup].Item1;
+                            int version = timestamp[part_obj_tup].Item2;
+                            //Server outdated get cache value
+                            if (serverIndex>reply.ServerIndex || (serverIndex==reply.ServerIndex && version >= reply.Version)) {
+                                Console.WriteLine("Server outdated, reading from cache!");
+                                value = responseCache.getCorrectValue(new Tuple<string, int, string, string>(partition_id, serverIndex, object_id, value));
+                            }
+                            else {
+                                responseCache.addEntry(new Tuple<string, int, string, string>(partition_id, serverIndex, object_id, value));
+                                timestamp[part_obj_tup] = new Tuple<int, int>(reply.ServerIndex, reply.Version);
+                            }
+                        }
                         Console.WriteLine("Read value " + value + " on partition " + partition_id + " on object " + object_id);
                         success = true;
                     }
@@ -301,10 +297,8 @@ namespace GStoreClient
 
                     return reply.Ok;
                 }
-                catch (AccessViolationException)
+                catch (RpcException)
                 {
-
-
                     Console.Error.WriteLine("Error: Connection failed to server " + server_id + " of partition " + partition_id);
                     removeServer(partition_id, current_server_id);
                     if (partitionMap[partition_id].Count != 0)
