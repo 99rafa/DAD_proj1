@@ -330,9 +330,9 @@ namespace GStoreClient
                 {
 
                     if (obj.IsMaster)
-                        Console.WriteLine("Object " + obj.ObjectId + " with value '" + obj.Value + "' in partition " + obj.PartitionId + "(master for this partition).");
+                        Console.WriteLine("-> Object " + obj.ObjectId + " with value '" + obj.Value + "' in partition " + obj.PartitionId + "(master for this partition).");
                     else
-                        Console.WriteLine("Object " + obj.ObjectId + " with value " + obj.Value + " in partition " + obj.PartitionId);
+                        Console.WriteLine("-> Object " + obj.ObjectId + " with value " + obj.Value + " in partition " + obj.PartitionId);
                 }
             }
             catch (RpcException)
@@ -349,18 +349,9 @@ namespace GStoreClient
             {
                 foreach (String server_id in pair.Value)
                 {
-                    GStoreServerService.GStoreServerServiceClient server = serverMap[server_id].service;
-                    try
-                    {
-                        ListGlobalReply reply = server.ListGlobal(new ListGlobalRequest { PartitionId = pair.Key });
-                        foreach (var obj in reply.ObjDesc)
-                            Console.WriteLine("Partition_id: " + obj.PartitionId + " , Object_id: " + obj.ObjectId);
-                        break;
-                    }
-                    catch (RpcException)
-                    {
-                        Console.Error.WriteLine("Error: Connection failed to server " + server_id);
-                    }
+                    ListServer(server_id);
+                    Console.WriteLine();
+
                 }
             }
         }

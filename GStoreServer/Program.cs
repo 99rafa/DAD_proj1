@@ -234,10 +234,13 @@ namespace gStoreServer
             ListServerObjectsReply reply = new ListServerObjectsReply { };
             foreach (var pair in serverObjects)
             {
-                //TODO LOCK
+                //Lock partition
+                ReaderWriterLockSlim partitionLock = this.puppetService.partitionLocks[pair.Key.Item1]; //pair.Key.Item1 = partition_id
+                partitionLock.EnterReadLock();
                 String obj_id = pair.Key.Item2;
                 String part_id = pair.Key.Item1;
                 String val = pair.Value;
+                partitionLock.ExitReadLock();
                 Console.WriteLine("\tAdding object " + obj_id + " with value " + val);
                 reply.Objects.Add(new Object
                 {
