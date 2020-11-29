@@ -88,8 +88,7 @@ namespace GStoreClient
         public void ReadValue(
            string partition_id, string object_id, string server_id)
         {
-            int current_version = timestamp[new Tuple<string, string>(partition_id, object_id)].Item1;
-            int server_index = timestamp[new Tuple<string, string>(partition_id, object_id)].Item2;
+           
             //REPLACE WITH TIMESTAMP GETTER
             int initialCount = this.partitionMap[partition_id].Count;
             bool success = false;
@@ -196,13 +195,36 @@ namespace GStoreClient
                 }
                 try
                 {
+                    
                     ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
                     {
                         PartitionId = partition_id,
                         ObjectId = object_id,
                     });
+                    String value = reply.Value;
+                    Tuple<String, String> part_obj_tup = new Tuple<String, String>(partition_id, object_id);
+                    if (!timestamp.ContainsKey(part_obj_tup))
+                    {
+                        timestamp.Add(part_obj_tup, new Tuple<int, int>(reply.ServerIndex, reply.Version));
+                    }
+                    else
+                    {
+                        int serverIndex = timestamp[part_obj_tup].Item1;
+                        int version = timestamp[part_obj_tup].Item1;
+                        //Server outdated get cache value
+                        if (version >= reply.Version)
+                        {
+                            Console.WriteLine("Server outdated, reading from cache!");
+                            value = responseCache.getCorrectValue(new Tuple<string, int, string, string>(partition_id, serverIndex, object_id, value));
+                        }
+                        else
+                        {
+                            responseCache.addEntry(new Tuple<string, int, string, string>(partition_id, serverIndex, object_id, value));
+                            timestamp[part_obj_tup] = new Tuple<int, int>(reply.ServerIndex, reply.Version);
+                        }
+                    }
 
-                    if (reply.Value.Equals("N/A"))
+                    if (value.Equals("N/A"))
                     {
                         Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from current server");
                         if (server_id == "-1") return;
@@ -218,15 +240,40 @@ namespace GStoreClient
                             });
                             current_server = new_server;
                             current_server_id = server_id;
+
+                            value = reply.Value;
+                            part_obj_tup = new Tuple<String, String>(partition_id, object_id);
+                           
+                            //Check if client timestamp has object
+                            if (!timestamp.ContainsKey(part_obj_tup))
+                            {
+                                timestamp.Add(part_obj_tup, new Tuple<int, int>(reply.ServerIndex, reply.Version));
+                            }
+                            else
+                            {
+                                int serverIndex = timestamp[part_obj_tup].Item1;
+                                int version = timestamp[part_obj_tup].Item1;
+                                //Server outdated get cache value
+                                if (version >= reply.Version)
+                                {
+                                    Console.WriteLine("Server outdated, reading from cache!");
+                                    value = responseCache.getCorrectValue(new Tuple<string, int, string, string>(partition_id, serverIndex, object_id, value));
+                                }
+                                else
+                                {
+                                    responseCache.addEntry(new Tuple<string, int, string, string>(partition_id, serverIndex, object_id, value));
+                                    timestamp[part_obj_tup] = new Tuple<int, int>(reply.ServerIndex, reply.Version);
+                                }
+                            }
                         }
                         else
                         {
                             Console.Error.WriteLine("Error: Unable to locate server " + server_id);
                         }
-                        if (reply.Value.Equals("N/A")) Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from given server");
-                        else Console.WriteLine("Read value '" + reply.Value + "' on partition " + partition_id + " on object " + object_id);
+                        if (value.Equals("N/A")) Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from given server");
+                        else Console.WriteLine("Read value '" + value + "' on partition " + partition_id + " on object " + object_id);
                     }
-                    else Console.WriteLine("Read value " + reply.Value + " on partition " + partition_id + " on object " + object_id);
+                    else Console.WriteLine("Read value " + value + " on partition " + partition_id + " on object " + object_id);
 
                 }
                 catch (RpcException)
