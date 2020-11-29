@@ -25,6 +25,8 @@ namespace GStoreClient
     public class GStoreClient
     {
         Queue<String> commandQueue = new Queue<String>();
+
+        private static int CACHE_LIMIT = 20;
         private GStoreServerService.GStoreServerServiceClient current_server;
         private String current_server_id;
         private string username;
@@ -34,6 +36,11 @@ namespace GStoreClient
             new Dictionary<string, ClientStruct>();
         // dictionary with partitionID as key and list of serverID's
         private Dictionary<string, List<string>> partitionMap = new Dictionary<string, List<string>>();
+
+        private ResponseCache responseCache = new ResponseCache(CACHE_LIMIT);
+
+        private Dictionary<Tuple<String,String>,Tuple<int,int>> timestamp = new Dictionary<Tuple<String, String>, Tuple<int, int>>();
+
 
         public GStoreClient(String user, String host, String args)
         {
@@ -78,11 +85,12 @@ namespace GStoreClient
        }
          }
 
-   
-
         public void ReadValue(
            string partition_id, string object_id, string server_id)
         {
+            int current_version = timestamp[new Tuple<string, string>(partition_id, object_id)].Item1;
+            int server_index = timestamp[new Tuple<string, string>(partition_id, object_id)].Item2;
+            //REPLACE WITH TIMESTAMP GETTER
 
             if (current_server == null)
             {
@@ -115,33 +123,63 @@ namespace GStoreClient
                     ObjectId = object_id,
                 });
 
-                if (reply.Value.Equals("N/A"))
+                string value;
+                //Se a versao ta desatualizada, busca uma a cache
+                if (current_version >= reply.Version)
                 {
-                    Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from current server");
-                    if (server_id == "-1") return;
-                    Console.WriteLine("Connecting to server " + server_id + "...");
-                    if (serverMap.ContainsKey(server_id))
-                    {
-                        GStoreServerService.GStoreServerServiceClient new_server = serverMap[server_id].service;
-
-                        reply = new_server.ReadValue(new ReadValueRequest
-                        {
-                            PartitionId = partition_id,
-                            ObjectId = object_id,
-                        });
-                        current_server = new_server;
-                        current_server_id = server_id;
-                    }
-                    else
-                    {
-                        Console.Error.WriteLine("Error: Unable to locate server " + server_id);
-                    }
-                    if (reply.Value.Equals("N/A")) Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from given server");
-                    else Console.WriteLine("Read value '" + reply.Value + "' on partition " + partition_id + " on object " + object_id);
+                    value = responseCache.getCorrectValue(new Tuple<string, int, string, string>(partition_id, reply.ServerIndex, object_id, reply.Value));
+                    Console.WriteLine("Outdated version! reading from cache!");
                 }
-                else Console.WriteLine("Read value " + reply.Value + " on partition " + partition_id + " on object " + object_id);
+                //Se nao, atualiza-se o timestamp e adiciona se a entrada a cache
+                else
+                {
+                    value = reply.Value;
+                    responseCache.addEntry(new Tuple<string, int, string, string>(partition_id, reply.ServerIndex, object_id, reply.Value));
+                    timestamp[new Tuple<string, string>(partition_id, object_id)] = new Tuple<int, int>(reply.ServerIndex, reply.Version);
+                }
 
-            }
+                if (value.Equals("N/A"))
+                    {
+                        Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from current server");
+                        if (server_id == "-1") return;
+                        Console.WriteLine("Connecting to server " + server_id + "...");
+                        if (serverMap.ContainsKey(server_id))
+                        {
+                            GStoreServerService.GStoreServerServiceClient new_server = serverMap[server_id].service;
+
+                            reply = new_server.ReadValue(new ReadValueRequest
+                            {
+                                PartitionId = partition_id,
+                                ObjectId = object_id,
+                            });
+                            current_server = new_server;
+                            current_server_id = server_id;
+
+                        //Se a versao ta desatualizada, busca uma a cache
+                        if (current_version >= reply.Version)
+                        {
+                            value = responseCache.getCorrectValue(new Tuple<string, int, string, string>(partition_id, reply.ServerIndex, object_id, reply.Value));
+                            Console.WriteLine("Outdated version! reading from cache!");
+                        }
+                        //Se nao, atualiza-se o timestamp e adiciona se a entrada a cache
+                        else
+                        {
+                            value = reply.Value;
+                            responseCache.addEntry(new Tuple<string, int, string, string>(partition_id, reply.ServerIndex, object_id, reply.Value));
+                            timestamp[new Tuple<string, string>(partition_id, object_id)] = new Tuple<int, int>(reply.ServerIndex, reply.Version);
+                        }
+
+                    }
+                        else
+                        {
+                            Console.Error.WriteLine("Error: Unable to locate server " + server_id);
+                        }
+                        if (value.Equals("N/A")) Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from given server");
+                        else Console.WriteLine("Read value '" + value + "' on partition " + partition_id + " on object " + object_id);
+                    }
+                    else Console.WriteLine("Read value " + value + " on partition " + partition_id + " on object " + object_id);
+
+                }
             catch (RpcException)
             {
                 Console.Error.WriteLine("Error: Connection failed to server ");// + server_id + " of partition " + partition_id);
