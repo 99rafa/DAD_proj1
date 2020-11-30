@@ -179,7 +179,8 @@ namespace gStoreServer
     // GStoreServerServiceBase is the generated base implementation of the service
     public class ServerService : GStoreServerService.GStoreServerServiceBase
     {
-
+        private static int LOG_ENTRYS_LIMIT = 20;
+        private static int GOSSIP_TIME = 10000;
         public PuppetServerService puppetService;
 
         //key: <partition_id, object_id>      value: object_value
@@ -187,7 +188,8 @@ namespace gStoreServer
 
         //timestamp -  key: <partition_id, object_id>      value: <server_id, object_version>
         private Dictionary<Tuple<String, String>, Tuple<int, int>> timestamp = new Dictionary<Tuple<String, String>, Tuple<int, int>>();
-        
+
+        System.Timers.Timer gTimer;
 
         //private Semaphore _semaphore = new Semaphore(1, 1);
 
@@ -201,6 +203,12 @@ namespace gStoreServer
             min_delay = min;
             max_delay = max;
             server_int_id = serv_int;
+
+            gTimer = new System.Timers.Timer(GOSSIP_TIME);
+            gTimer.Elapsed += sendGossip;
+            gTimer.AutoReset = true;
+            gTimer.Enabled = true;
+
         }
 
 
@@ -311,6 +319,13 @@ namespace gStoreServer
                 if(!puppetService.logEntrys[request.PartitionId].Contains(receivedObjecID))
                     puppetService.logEntrys[request.PartitionId].AddLast(receivedObjecID);
 
+                //Send gossip if logs hit treshold
+                if (puppetService.logEntrys.Count >= LOG_ENTRYS_LIMIT)
+                {
+                    sendGossip(new object(),new EventArgs());
+                    resetGossipTimer();
+                }
+
                 //DEBUG
                 printTimestamp();
 
@@ -386,6 +401,14 @@ namespace gStoreServer
                     if ((!this.timestamp.ContainsKey(key)) || (ts.ServerId > this.timestamp[key].Item1 || (ts.ServerId == this.timestamp[key].Item1 && ts.ObjectVersion > this.timestamp[key].Item2))) {
                         serverObjects[key] = ts.ObjectValue;
                         this.timestamp[key] = new Tuple<int, int>(ts.ServerId, ts.ObjectVersion);
+                        puppetService.logEntrys[key.Item1].AddLast(key);
+                    }
+
+                    //Send gossip if logs hit treshold
+                    if (puppetService.logEntrys.Count >= LOG_ENTRYS_LIMIT)
+                    {
+                        sendGossip(new object(), new EventArgs());
+                        resetGossipTimer();
                     }
                 }
                 finally {
@@ -451,7 +474,7 @@ namespace gStoreServer
             });
         }
 
-        public void sendGossip()
+        public void sendGossip(object o,EventArgs e)
         {
             //Send values and timestamps to every server in partition
 
@@ -483,6 +506,7 @@ namespace gStoreServer
                                 });
                                 Console.WriteLine("\t Sending gossip " + gossipRequest);
                             }
+                            puppetService.logEntrys[partId].Clear();
 
                             AsyncUnaryCall<GossipReply> reply = server.service.GossipAsync(gossipRequest);
                             pendingRequests.Add(reply);
@@ -495,9 +519,16 @@ namespace gStoreServer
 
                     }
                 }
-                //Wait for answers?
+                
             }
         }
+
+        public void resetGossipTimer()
+        {
+            gTimer.Stop();
+            gTimer.Start();
+        }
+
         public void removeCurrentMaster(String partition)
         {
             Console.WriteLine("\n\tprinting Current Masters");
@@ -557,15 +588,10 @@ namespace gStoreServer
             //Configuring HTTP 
             AppContext.SetSwitch(
   "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            Random r = new Random();
             while (true)
             {
                 if (puppetService.crashed)
                     break;
-                //Random delay between gossips
-                System.Threading.Tasks.Task.Delay(r.Next(1000,5000)).Wait();
-                serverService.sendGossip();
-
             }
         }
     }
