@@ -227,7 +227,7 @@ namespace GStoreClient
                             int serverIndex = timestamp[part_obj_tup].Item1;
                             int version = timestamp[part_obj_tup].Item2;
                             //Server outdated get cache value
-                            if (serverIndex>reply.ServerIndex || (serverIndex==reply.ServerIndex && version >= reply.Version)) {
+                            if (serverIndex>reply.ServerIndex || (serverIndex==reply.ServerIndex && version > reply.Version)) {
                                 Console.WriteLine("Server outdated, reading from cache!");
                                 value = responseCache.getCorrectValue(new Tuple<string, int, string, string>(partition_id, serverIndex, object_id, value));
                             }
@@ -262,6 +262,10 @@ namespace GStoreClient
                 if (initialCount == alreadyTried.Count)
                 {
                     Console.Error.WriteLine("Error: Could not retrieve object " + object_id + " from the system. Aborting");
+                    Console.WriteLine("Server outdated, reading from cache!");
+                    string value = responseCache.getValue(new Tuple<string, string>(partition_id, object_id));
+                    if(value == null) { Console.WriteLine("Value not found in cache"); }
+                    else { Console.WriteLine("Read value " + value + " on cache "); }
                     return "";
                 }
                 start_server = partitionMap[partition_id][index];
@@ -274,10 +278,11 @@ namespace GStoreClient
                string partition_id, string object_id, string value)
         {
             bool success = false;
-            while (!success && partitionMap[partition_id].Count != 0)
+            int current_server_index = 0;
+            while (!success && partitionMap[partition_id].Count != 0 && partitionMap[partition_id].Count > current_server_index)
             {
                 //Assuming the replica master is the first element of the list  
-                string server_id = partitionMap[partition_id].First();
+                string server_id = partitionMap[partition_id][current_server_index];
 
                 GStoreServerService.GStoreServerServiceClient master = serverMap[server_id].service;
                 current_server = master;
@@ -293,23 +298,27 @@ namespace GStoreClient
                         ObjectId = object_id,
                         Value = value
                     }, deadline: DateTime.UtcNow.AddSeconds(5));
-                    Console.WriteLine("Write successful on server " + server_id);
-
-                    removeServers(partition_id, reply.CurrentLeader);
-
-                    if (reply.CurrentLeader == current_server_id)
-                    {
+                    
+                    //If the reply is false the requested server is not the leader
+                    if(reply.Ok == false) {
+                        Console.WriteLine("Received false ok");
+                        //remove every server until reply.CurrentLeader
+                        removeServers(partition_id, reply.CurrentLeader);
+                        current_server_index = 0;
+                    } else { // otherwise the server was the correct leader and the write was successful
+                        Console.WriteLine("Write successful on server " + server_id);
+                        //remove every server until reply.CurrentLeader
+                        removeServers(partition_id, server_id);
                         success = true;
                         return reply.Ok;
                     }
+                    Console.WriteLine("Retrying write..");
 
                 }
                 catch (RpcException)
                 {
                     Console.Error.WriteLine("Error: Connection failed to server " + server_id + " of partition " + partition_id);
-                    
-                    if (partitionMap[partition_id].Count != 0)
-                        Console.Out.WriteLine("Reconnecting to server " + this.partitionMap[partition_id].First());
+                    current_server_index++;
 
                 }
             }
@@ -455,7 +464,9 @@ namespace GStoreClient
             while (this.partitionMap[partition].Count != 0) {
                 remove_id = this.partitionMap[partition].First();
                 if (remove_id == server_id) break; 
-                this.partitionMap[partition].Remove(this.partitionMap[partition][this.partitionMap[partition].IndexOf(server_id)]);
+                this.partitionMap[partition].Remove(this.partitionMap[partition][this.partitionMap[partition].IndexOf(remove_id)]);
+
+                Console.Error.WriteLine("Removing server  " + remove_id);
             }
             
             if (this.partitionMap[partition].Count == 0) 

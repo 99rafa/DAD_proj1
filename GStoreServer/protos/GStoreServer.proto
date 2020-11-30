@@ -8,6 +8,7 @@ service GStoreServerService {
   rpc ShareWrite (ShareWriteRequest) returns (ShareWriteReply);
   rpc Lock (LockRequest) returns (LockReply);
   rpc Gossip (GossipRequest) returns (GossipReply);
+  rpc Heartbeat (HeartbeatRequest) returns (HeartbeatReply);
 }
 
 message ReadValueRequest {
@@ -93,4 +94,12 @@ message timestampValue{
 	int32 object_version = 4;
 	
 	string object_value = 5;
+}
+
+
+message HeartbeatRequest {
+
+}
+message HeartbeatReply {
+
 }

@@ -49,6 +49,15 @@ namespace GStoreClient
             }
             return obj.Item4;
         }
+
+        public String getValue(Tuple<String, String> obj) {
+            for (int j = 0, i = _currentIndex - 1; j < _ocupiedPositions; j++, i = (i - 1) % _limit) {
+                if (_cacheMap[i].Item1 == obj.Item1 && _cacheMap[i].Item3 == obj.Item2) {
+                    return _cacheMap[i].Item4;
+                }
+            }
+            return null;
+        }
     }
 }
 

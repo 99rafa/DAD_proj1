@@ -294,8 +294,46 @@ namespace gStoreServer
             try {
                 //Check if this server is master of partition
                 if (!puppetService.serverIsMaster(request.PartitionId)) {
-                    Console.WriteLine("\t\t Receiving write request when this server is not the leader. Becoming leader");
-                    removeCurrentMaster(request.PartitionId);
+                    Console.WriteLine("\t\t Receiving write request when this server is not the leader. Testing if other leaders are dead");
+                    Monitor.Enter(this.puppetService.partitionServers);
+                    string current_leader_url = null;
+                    try { 
+                        while(true) {
+                            if(this.puppetService.partitionServers.Count <= 0) {
+                                Console.WriteLine("\t\t No more servers to test");
+                                break;
+                            }
+                            var server = this.puppetService.partitionServers[request.PartitionId][0];
+                            Console.WriteLine("\t\t Testing if server " + server.url + " is leader");
+                            if (server.url == this.puppetService.url) {
+                                Console.WriteLine("\t\t Found out I am the leader");
+                                break; 
+                            }
+                            try {
+                                HeartbeatReply reply = this.puppetService.openChannels[server.url].Heartbeat(new HeartbeatRequest { }, deadline: DateTime.UtcNow.AddSeconds(5));
+                                Console.WriteLine("\t\t Found out " + current_leader_url + " is the leader");
+                                current_leader_url = server.url;
+                                break;
+                            }
+                            catch (RpcException) {
+                                Console.WriteLine("Server " + server.url + " is dead, removing ");
+                                removeCurrentMaster(request.PartitionId);
+                            }
+                        }
+                       
+                    }
+                    finally {
+                        Monitor.Exit(this.puppetService.partitionServers);
+                    }
+
+                    if (current_leader_url != null) {
+                        return await Task.FromResult(new WriteValueReply {
+                            Ok = false,
+                            CurrentLeader = current_leader_url
+                        });
+                    } 
+                    
+
                 }
 
                 //Change current value
@@ -409,6 +447,7 @@ namespace gStoreServer
                     {
                         sendGossip(new object(), new EventArgs());
                         resetGossipTimer();
+
                     }
                 }
                 finally {
@@ -481,9 +520,6 @@ namespace gStoreServer
             //TODO MIGHT BE MISSING LOCK ON PARTITION SERVER
             foreach (var partId in puppetService.partitionServers.Keys)
             {
-                if (!puppetService.serverIsMaster(partId))
-                    continue;
-
                 List<AsyncUnaryCall<GossipReply>> pendingRequests = new List<AsyncUnaryCall<GossipReply>>();
                 List<ServerStruct> partitionServers = puppetService.getPartitionServers(partId);
                 foreach (ServerStruct server in partitionServers)
