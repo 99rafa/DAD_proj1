@@ -84,7 +84,9 @@ namespace gStoreServer
                 }
 
             }
+            
             logEntrys.Add(request.PartitionName, new LinkedList<Tuple<string, string>>());
+
             return Task.FromResult(new PartitionReply
             {
                 Ok = true
@@ -195,6 +197,8 @@ namespace gStoreServer
 
         int min_delay, max_delay, server_int_id;
 
+        private ReaderWriterLockSlim logEntryLock = new ReaderWriterLockSlim();
+
 
 
         public ServerService(PuppetServerService p, int min, int max, int serv_int)
@@ -205,7 +209,7 @@ namespace gStoreServer
             server_int_id = serv_int;
 
             gTimer = new System.Timers.Timer(GOSSIP_TIME);
-            gTimer.Elapsed += sendGossip;
+            gTimer.Elapsed += sendGossipAsync;
             gTimer.AutoReset = true;
             gTimer.Enabled = true;
 
@@ -352,16 +356,26 @@ namespace gStoreServer
                 else {// otherwise version = 1
                     timestamp[receivedObjecID] = new Tuple<int, int>(server_int_id, newVersion);
                 }
-                
+
                 //Add entry to log entry
-                if(!puppetService.logEntrys[request.PartitionId].Contains(receivedObjecID))
-                    puppetService.logEntrys[request.PartitionId].AddLast(receivedObjecID);
+                logEntryLock.EnterWriteLock();
+                try {
+                    if (!puppetService.logEntrys[request.PartitionId].Contains(receivedObjecID))
+                        puppetService.logEntrys[request.PartitionId].AddLast(receivedObjecID);
+                } finally {
+                    logEntryLock.ExitWriteLock();
+                }
 
                 //Send gossip if logs hit treshold
-                if (puppetService.logEntrys.Count >= LOG_ENTRYS_LIMIT)
-                {
-                    sendGossip(new object(),new EventArgs());
-                    resetGossipTimer();
+                logEntryLock.EnterReadLock();
+                try {
+                    if (puppetService.logEntrys.Count >= LOG_ENTRYS_LIMIT) {
+                        sendGossipAsync(new object(), new EventArgs());
+                        resetGossipTimer();
+                    }
+                }
+                finally {
+                    logEntryLock.ExitReadLock();
                 }
 
                 //DEBUG
@@ -421,8 +435,10 @@ namespace gStoreServer
         }
         */
         public override Task<GossipReply> Gossip(GossipRequest request, ServerCallContext context) {
-            //List<ServerStruct> partitionLock = this.puppetService.partitionServers[request.Timestamp[0].PartitionId];
-            //Monitor.Enter(partitionLock);
+
+            while (puppetService.frozen) ;
+            System.Threading.Thread.Sleep(RandomDelay());
+
             Console.WriteLine("\nReceived Gossip " + request.Timestamp.Count());
             foreach(timestampValue ts in request.Timestamp) {
                 Tuple<String, String> key = new Tuple<String, String>(ts.PartitionId, ts.ObjectId);
@@ -442,13 +458,15 @@ namespace gStoreServer
                         puppetService.logEntrys[key.Item1].AddLast(key);
                     }
 
-                    //Send gossip if logs hit treshold
-                    if (puppetService.logEntrys.Count >= LOG_ENTRYS_LIMIT)
-                    {
-                        sendGossip(new object(), new EventArgs());
-                        resetGossipTimer();
+                    logEntryLock.EnterReadLock();
+                    try {
+                        //Send gossip if logs hit treshold
+                        if (puppetService.logEntrys.Count >= LOG_ENTRYS_LIMIT) {
+                            sendGossipAsync(new object(), new EventArgs());
+                            resetGossipTimer();
 
-                    }
+                        }
+                    } finally { logEntryLock.ExitReadLock(); }
                 }
                 finally {
                    Console.WriteLine(" Unlocking ");
@@ -513,10 +531,12 @@ namespace gStoreServer
             });
         }
 
-        public void sendGossip(object o,EventArgs e)
+        public async void sendGossipAsync(object o,EventArgs e)
         {
-            //Send values and timestamps to every server in partition
+            while (puppetService.frozen) ;
 
+            //Send values and timestamps to every server in partition
+            Console.WriteLine("\nStarting new gossip round");
             //TODO MIGHT BE MISSING LOCK ON PARTITION SERVER
             foreach (var partId in puppetService.partitionServers.Keys)
             {
@@ -530,19 +550,27 @@ namespace gStoreServer
                         try
                         {
                             GossipRequest gossipRequest = new GossipRequest { };
-                            foreach (var entry in puppetService.logEntrys[partId])
-                            {
-                                gossipRequest.Timestamp.Add(new timestampValue
-                                {
-                                    PartitionId = entry.Item1,
-                                    ObjectId = entry.Item2,
-                                    ServerId = timestamp[new Tuple<string, string>(entry.Item1, entry.Item2)].Item1,
-                                    ObjectVersion = timestamp[new Tuple<string, string>(entry.Item1, entry.Item2)].Item2,
-                                    ObjectValue = serverObjects[new Tuple<string, string>(entry.Item1, entry.Item2)]
-                                });
-                                Console.WriteLine("\t Sending gossip " + gossipRequest);
+
+                            logEntryLock.EnterReadLock();
+                            try {
+                                foreach (var entry in puppetService.logEntrys[partId]) {
+                                    gossipRequest.Timestamp.Add(new timestampValue {
+                                        PartitionId = entry.Item1,
+                                        ObjectId = entry.Item2,
+                                        ServerId = timestamp[new Tuple<string, string>(entry.Item1, entry.Item2)].Item1,
+                                        ObjectVersion = timestamp[new Tuple<string, string>(entry.Item1, entry.Item2)].Item2,
+                                        ObjectValue = serverObjects[new Tuple<string, string>(entry.Item1, entry.Item2)]
+                                    });
+                                    Console.WriteLine("\t Sending gossip " + gossipRequest);
+                                }
+                            } finally {
+                                logEntryLock.ExitReadLock();
                             }
-                            puppetService.logEntrys[partId].Clear();
+
+                            logEntryLock.EnterWriteLock();
+                            try { puppetService.logEntrys[partId].Clear(); }
+                            finally { logEntryLock.ExitWriteLock(); }
+                            
 
                             AsyncUnaryCall<GossipReply> reply = server.service.GossipAsync(gossipRequest);
                             pendingRequests.Add(reply);
@@ -555,7 +583,25 @@ namespace gStoreServer
 
                     }
                 }
+
+                try {
+                    //wait for one response
+                    await Task.WhenAny(pendingRequests.Select(c => c.ResponseAsync));
+
+                    Console.WriteLine("Gossip requests completed ");
+                }
+                catch (RpcException) {
+                    Console.WriteLine("\t\tConnection failed to server, removing server");
+                    for (int i = 0; i < pendingRequests.Count(); i++) {
+                        if (pendingRequests[i].ResponseAsync.Exception != null) {
+                            Console.WriteLine("\t\tRemoving server: " + partitionServers[i + 1].url); //i+1 because the master server is also in the partitionServers list
+                            puppetService.removeServer(partitionServers[i + 1].url);
+                        }
+                    }
+                }
                 
+
+
             }
         }
 
