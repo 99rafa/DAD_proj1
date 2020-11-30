@@ -91,12 +91,12 @@ namespace GStoreClient
             int initialCount = this.partitionMap[partition_id].Count;
             bool success = false, firstTry = true;
             List<String> alreadyTried = new List<String>();
-            String lastServerAttached = "";
+            String lastServerAttached = ""; //needed when the object cannot be found in any server 
 
             while (!success && partitionMap[partition_id].Count != 0)
             {
 
-
+                //if it is already attached to a server from a previous reqyest
                 if (current_server == null)
                 {
                     // when there is no current server attached and the server_id argument is -1
@@ -106,6 +106,7 @@ namespace GStoreClient
                         lastServerAttached = current_server_id;
                         current_server_id = getNextServer(initialCount, alreadyTried, object_id, partition_id);
 
+                        //no server left to try
                         if (current_server_id.Equals(""))
                         {
                             current_server_id = lastServerAttached;
@@ -116,18 +117,20 @@ namespace GStoreClient
 
                     else
                     {
+                        
                         if (!this.partitionMap[partition_id].Contains(server_id))
                         {
                             Console.Error.WriteLine("Error: Unable to locate server " + server_id);
                         }
-
+                        // tries the suggestion given as an argument if it has not been already tried and if it has already tried the one 
+                        //the client was attached to at the beggininng
                         if (this.partitionMap[partition_id].Contains(server_id) && !alreadyTried.Contains(server_id) && !firstTry)
                         {
 
                             current_server = serverMap[server_id].service;
                             current_server_id = server_id;
                         }
-
+                        //iterates the list of server for a new server to attach to
                         else
                         {
                             lastServerAttached = current_server_id;
@@ -145,18 +148,22 @@ namespace GStoreClient
                 }
                 else
                 {
+                    //if it has not already tried the one previously attached in another request, tries that one
                     if (firstTry)
                     {
                         current_server = serverMap[current_server_id].service;
                     }
+
                     else
                     {
+                        //contacts the suggestion
                         if (this.partitionMap[partition_id].Contains(server_id) && !alreadyTried.Contains(server_id))
                         {
 
                             current_server = serverMap[server_id].service;
                             current_server_id = server_id;
                         }
+                        //if there is no suggestion, contact any of the servers
                         else if (server_id.Equals("-1"))
                         {
 
@@ -171,6 +178,7 @@ namespace GStoreClient
 
                             current_server = serverMap[current_server_id].service;
                         }
+                        //if it has already tried the suggestion
                         else
                         {
                             if(! this.partitionMap[partition_id].Contains(server_id))
