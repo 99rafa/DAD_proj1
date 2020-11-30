@@ -26,6 +26,7 @@ message WriteValueRequest {
 
 message WriteValueReply {
 	bool ok = 1;
+	string current_leader = 4;
 }
 
 message ListServerObjectsRequest {

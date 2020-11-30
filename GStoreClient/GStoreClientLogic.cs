@@ -201,11 +201,13 @@ namespace GStoreClient
                 try
                 {
                     firstTry = false;
+
                     ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
                     {
                         PartitionId = partition_id,
                         ObjectId = object_id,
-                    });
+                    }, deadline: DateTime.UtcNow.AddSeconds(5));
+
 
                     if (reply.Value.Equals("N/A"))
                     {
@@ -241,11 +243,10 @@ namespace GStoreClient
                 }
                 catch (RpcException)
                 {
+
                     Console.Error.WriteLine("Error: Connection failed to server " + current_server_id + " of partition " + partition_id);
                     Console.WriteLine(current_server_id);
-                    removeServer(partition_id, current_server_id);
                     alreadyTried.Add(current_server_id);
-
 
                 }
             }
@@ -291,16 +292,22 @@ namespace GStoreClient
                         PartitionId = partition_id,
                         ObjectId = object_id,
                         Value = value
-                    });
-                    Console.WriteLine("Write successfull on server " + server_id);
-                    success = true;
+                    }, deadline: DateTime.UtcNow.AddSeconds(5));
+                    Console.WriteLine("Write successful on server " + server_id);
 
-                    return reply.Ok;
+                    removeServers(partition_id, reply.CurrentLeader);
+
+                    if (reply.CurrentLeader == current_server_id)
+                    {
+                        success = true;
+                        return reply.Ok;
+                    }
+
                 }
                 catch (RpcException)
                 {
                     Console.Error.WriteLine("Error: Connection failed to server " + server_id + " of partition " + partition_id);
-                    removeServer(partition_id, current_server_id);
+                    
                     if (partitionMap[partition_id].Count != 0)
                         Console.Out.WriteLine("Reconnecting to server " + this.partitionMap[partition_id].First());
 
@@ -441,16 +448,18 @@ namespace GStoreClient
                 return 0;
         }
 
-        public void removeServer(String partition, String server_id)
+        public void removeServers(String partition, String server_id)
         {
 
-            if (this.partitionMap[partition].Count != 0)
+            String remove_id = "";
+            while (this.partitionMap[partition].Count != 0) {
+                remove_id = this.partitionMap[partition].First();
+                if (remove_id == server_id) break; 
                 this.partitionMap[partition].Remove(this.partitionMap[partition][this.partitionMap[partition].IndexOf(server_id)]);
-            else
-            {
-                Console.Error.WriteLine("Error: No more servers available in partition");
-
             }
+            
+            if (this.partitionMap[partition].Count == 0) 
+                Console.Error.WriteLine("Error: No more servers available in partition");
         }
 
         public bool isCorrectRepeat()
