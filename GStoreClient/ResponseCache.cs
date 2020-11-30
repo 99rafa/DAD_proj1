@@ -12,7 +12,7 @@ namespace GStoreClient
         private int _ocupiedPositions = 0;
 
         //Partition,,Key,Value,Timestamp
-        private Tuple<String, int, String, String>[] _cacheMap;
+        private Tuple<String, String, String>[] _cacheMap;
 
         public ResponseCache()
         {
@@ -20,15 +20,15 @@ namespace GStoreClient
 
         public ResponseCache(int limit)
         {
-            _cacheMap = new Tuple<String, int, String, String>[limit];
+            _cacheMap = new Tuple<String, String, String>[limit];
             _limit = limit;
         }
 
-        public void addEntry(Tuple<String, int, String, String> entry)
+        public void addEntry(Tuple<String, String, String> entry)
         {
             for (int j = 0, i = _currentIndex - 1; j < _ocupiedPositions; j++, i = (i - 1) % _limit)
             {
-                if (_cacheMap[i].Item1 == entry.Item1 && _cacheMap[i].Item3 == entry.Item3)
+                if (_cacheMap[i].Item1 == entry.Item1 && _cacheMap[i].Item2 == entry.Item2)
                 {
                     _cacheMap[i] = entry;
                     return;
@@ -39,21 +39,13 @@ namespace GStoreClient
             _ocupiedPositions++;
         }
         
-        public String getCorrectValue(Tuple<String, int, String, String> obj)
+        public String getCorrectValue(Tuple<String, String> obj)
         {
-            for (int j = 0, i = _currentIndex - 1; j < _ocupiedPositions; j++, i = (i - 1 ) % _limit){
-                if(_cacheMap[i].Item1 == obj.Item1 && _cacheMap[i].Item3 == obj.Item3 && obj.Item2 >= _cacheMap[i].Item2)
+            for (int j = 0, i = _currentIndex - 1; j < _ocupiedPositions; j++, i = (i - 1) % _limit)
+            {
+                if (_cacheMap[i].Item1 == obj.Item1 && _cacheMap[i].Item3 == obj.Item2)
                 {
-                    return _cacheMap[i].Item4;
-                }
-            }
-            return obj.Item4;
-        }
-
-        public String getValue(Tuple<String, String> obj) {
-            for (int j = 0, i = _currentIndex - 1; j < _ocupiedPositions; j++, i = (i - 1) % _limit) {
-                if (_cacheMap[i].Item1 == obj.Item1 && _cacheMap[i].Item3 == obj.Item2) {
-                    return _cacheMap[i].Item4;
+                    return _cacheMap[i].Item3;
                 }
             }
             return null;
