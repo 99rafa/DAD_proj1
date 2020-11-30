@@ -221,7 +221,7 @@ namespace GStoreClient
                         Tuple<String, String> part_obj_tup = new Tuple<String, String>(partition_id, object_id);
                         if (!timestamp.ContainsKey(part_obj_tup)) {
                             timestamp.Add(part_obj_tup, new Tuple<int, int>(reply.ServerIndex, reply.Version));
-                            responseCache.addEntry(new Tuple<string, int, string, string>(partition_id, reply.ServerIndex, object_id, value));
+                            responseCache.addEntry(new Tuple<string, string, string>(partition_id, object_id, value));
                         }
                         else {
                             int serverIndex = timestamp[part_obj_tup].Item1;
@@ -229,10 +229,13 @@ namespace GStoreClient
                             //Server outdated get cache value
                             if (serverIndex>reply.ServerIndex || (serverIndex==reply.ServerIndex && version > reply.Version)) {
                                 Console.WriteLine("Server outdated, reading from cache!");
-                                value = responseCache.getCorrectValue(new Tuple<string, int, string, string>(partition_id, serverIndex, object_id, value));
+                                value = responseCache.getCorrectValue(new Tuple<string, string>(partition_id, object_id));
+                                //if cache has entry
+                                if(value == null)
+                                    value = reply.Value;
                             }
                             else {
-                                responseCache.addEntry(new Tuple<string, int, string, string>(partition_id, serverIndex, object_id, value));
+                                responseCache.addEntry(new Tuple<string, string, string>(partition_id, object_id, value));
                                 timestamp[part_obj_tup] = new Tuple<int, int>(reply.ServerIndex, reply.Version);
                             }
                         }
@@ -263,7 +266,7 @@ namespace GStoreClient
                 {
                     Console.Error.WriteLine("Error: Could not retrieve object " + object_id + " from the system. Aborting");
                     Console.WriteLine("Server outdated, reading from cache!");
-                    string value = responseCache.getValue(new Tuple<string, string>(partition_id, object_id));
+                    string value = responseCache.getCorrectValue(new Tuple<string, string>(partition_id, object_id));
                     if(value == null) { Console.WriteLine("Value not found in cache"); }
                     else { Console.WriteLine("Read value " + value + " on cache "); }
                     return "";
