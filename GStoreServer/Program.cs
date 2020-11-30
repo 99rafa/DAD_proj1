@@ -31,6 +31,9 @@ namespace gStoreServer
         // <partition_name, integer_value> Each value is used as a lock for that partition
         public Dictionary<string, ReaderWriterLockSlim> partitionLocks = new Dictionary<string, ReaderWriterLockSlim>();
 
+        //Log entrys
+        public Dictionary<String, LinkedList<Tuple<String, String>>> logEntrys = new Dictionary<String, LinkedList<Tuple<String, String>>>();
+
         public bool crashed = false;
         public bool frozen = false;
 
@@ -81,6 +84,7 @@ namespace gStoreServer
                 }
 
             }
+            logEntrys.Add(request.PartitionName, new LinkedList<Tuple<string, string>>());
             return Task.FromResult(new PartitionReply
             {
                 Ok = true
@@ -183,6 +187,7 @@ namespace gStoreServer
 
         //timestamp -  key: <partition_id, object_id>      value: <server_id, object_version>
         private Dictionary<Tuple<String, String>, Tuple<int, int>> timestamp = new Dictionary<Tuple<String, String>, Tuple<int, int>>();
+        
 
         //private Semaphore _semaphore = new Semaphore(1, 1);
 
@@ -301,44 +306,13 @@ namespace gStoreServer
                 else {// otherwise version = 1
                     timestamp[receivedObjecID] = new Tuple<int, int>(server_int_id, newVersion);
                 }
+                
+                //Add entry to log entry
+                if(!puppetService.logEntrys[request.PartitionId].Contains(receivedObjecID))
+                    puppetService.logEntrys[request.PartitionId].AddLast(receivedObjecID);
 
                 //DEBUG
                 printTimestamp();
-
-
-                //Send values and timestamps to every server in partition
-
-                //TODO MIGHT BE MISSING LOCK ON PARTITION SERVER
-
-                List<AsyncUnaryCall<GossipReply>> pendingRequests = new List<AsyncUnaryCall<GossipReply>>();
-                List<ServerStruct> partitionServers = puppetService.getPartitionServers(request.PartitionId);
-                foreach (ServerStruct server in partitionServers) {
-                    if (server.url != puppetService.url) { // dont send url to itself
-                        Console.WriteLine("\t Sending gossip with single write to " + server.url + " on object " + request.ObjectId + " with values " + request.Value);
-                        try {
-                            GossipRequest gossipRequest = new GossipRequest { };
-                            gossipRequest.Timestamp.Add(new timestampValue {
-                                PartitionId = request.PartitionId,
-                                ObjectId = request.ObjectId,
-                                ServerId = server_int_id,
-                                ObjectVersion = newVersion,
-                                ObjectValue = request.Value
-                            });
-                            Console.WriteLine("\t Sending gossip " + request.PartitionId + "  " + request.ObjectId + "  " + server_int_id + "  " + newVersion + "  " + request.Value);
-                            AsyncUnaryCall<GossipReply> reply = server.service.GossipAsync(gossipRequest);
-                            pendingRequests.Add(reply);
-                        }
-                        catch (RpcException) {
-                            Console.WriteLine("Connection failed to server " + server.url + " removing server");
-                            puppetService.removeServer(server.url);
-                        }
-
-                    }
-                }
-                //Wait for answers?
-
-
-
 
             }
             finally { partitionLock.ExitWriteLock(); }//Monitor.Exit(partitionLock); }
@@ -412,7 +386,6 @@ namespace gStoreServer
                     if ((!this.timestamp.ContainsKey(key)) || (ts.ServerId > this.timestamp[key].Item1 || (ts.ServerId == this.timestamp[key].Item1 && ts.ObjectVersion > this.timestamp[key].Item2))) {
                         serverObjects[key] = ts.ObjectValue;
                         this.timestamp[key] = new Tuple<int, int>(ts.ServerId, ts.ObjectVersion);
-
                     }
                 }
                 finally {
@@ -478,6 +451,53 @@ namespace gStoreServer
             });
         }
 
+        public void sendGossip()
+        {
+            //Send values and timestamps to every server in partition
+
+            //TODO MIGHT BE MISSING LOCK ON PARTITION SERVER
+            foreach (var partId in puppetService.partitionServers.Keys)
+            {
+                if (!puppetService.serverIsMaster(partId))
+                    continue;
+
+                List<AsyncUnaryCall<GossipReply>> pendingRequests = new List<AsyncUnaryCall<GossipReply>>();
+                List<ServerStruct> partitionServers = puppetService.getPartitionServers(partId);
+                foreach (ServerStruct server in partitionServers)
+                {
+                    if (server.url != puppetService.url)
+                    { // dont send url to itself
+                        Console.WriteLine("\t Sending partition " + partId + " gossip to " + server.url);
+                        try
+                        {
+                            GossipRequest gossipRequest = new GossipRequest { };
+                            foreach (var entry in puppetService.logEntrys[partId])
+                            {
+                                gossipRequest.Timestamp.Add(new timestampValue
+                                {
+                                    PartitionId = entry.Item1,
+                                    ObjectId = entry.Item2,
+                                    ServerId = timestamp[new Tuple<string, string>(entry.Item1, entry.Item2)].Item1,
+                                    ObjectVersion = timestamp[new Tuple<string, string>(entry.Item1, entry.Item2)].Item2,
+                                    ObjectValue = serverObjects[new Tuple<string, string>(entry.Item1, entry.Item2)]
+                                });
+                                Console.WriteLine("\t Sending gossip " + gossipRequest);
+                            }
+
+                            AsyncUnaryCall<GossipReply> reply = server.service.GossipAsync(gossipRequest);
+                            pendingRequests.Add(reply);
+                        }
+                        catch (RpcException)
+                        {
+                            Console.WriteLine("Connection failed to server " + server.url + " removing server");
+                            puppetService.removeServer(server.url);
+                        }
+
+                    }
+                }
+                //Wait for answers?
+            }
+        }
         public void removeCurrentMaster(String partition)
         {
             Console.WriteLine("\n\tprinting Current Masters");
@@ -537,10 +557,14 @@ namespace gStoreServer
             //Configuring HTTP 
             AppContext.SetSwitch(
   "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            Random r = new Random();
             while (true)
             {
                 if (puppetService.crashed)
                     break;
+                //Random delay between gossips
+                System.Threading.Tasks.Task.Delay(r.Next(1000,5000)).Wait();
+                serverService.sendGossip();
 
             }
         }
