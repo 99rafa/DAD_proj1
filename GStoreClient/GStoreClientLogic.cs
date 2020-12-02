@@ -84,7 +84,7 @@ namespace GStoreClient
            string partition_id, string object_id, string server_id)
         {
             String lastServerAttached = "";
-            List<String> serversLeft = this.partitionMap[partition_id];
+            List<String> serversLeft = new List<String>(this.partitionMap[partition_id]);
             bool success = false;
             
             if (!partitionMap.ContainsKey(partition_id))
