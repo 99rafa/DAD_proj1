@@ -89,115 +89,36 @@ namespace GStoreClient
    string partition_id, string object_id, string server_id)
         {
             int initialCount = this.partitionMap[partition_id].Count;
-            bool success = false, firstTry = true;
-            List<String> alreadyTried = new List<String>();
-            String lastServerAttached = ""; //needed when the object cannot be found in any server 
+            List<String> serversLeft = this.partitionMap[partition_id];
+            bool success = false;
 
-            while (!success && partitionMap[partition_id].Count != 0)
+
+            if (!partitionMap.ContainsKey(partition_id))
             {
+                Console.Error.WriteLine("Error: Partition " + partition_id + " does not exist in the system");
+                return;
+            }
 
-                //if it is already attached to a server from a previous reqyest
-                if (current_server == null)
+            if (current_server == null || !this.partitionMap[partition_id].Contains(current_server_id))
+            {
+                // when there is no current server attached and the server_id argument is -1
+                // it will try to connect to the partition master
+                if (this.partitionMap[partition_id].Contains(server_id))
                 {
-                    // when there is no current server attached and the server_id argument is -1
-                    // it will try to connect to the partition master
-                    if (server_id.Equals("-1"))
-                    {
-                        lastServerAttached = current_server_id;
-                        current_server_id = getNextServer(initialCount, alreadyTried, object_id, partition_id);
+                    current_server_id = server_id;
+                    current_server = serverMap[server_id].service;
 
-                        //no server left to try
-                        if (current_server_id.Equals(""))
-                        {
-                            current_server_id = lastServerAttached;
-                            return;
-                        }
-                        current_server = serverMap[current_server_id].service;
-                    }
-
-                    else
-                    {
-                        
-                        if (!this.partitionMap[partition_id].Contains(server_id))
-                        {
-                            Console.Error.WriteLine("Error: Unable to locate server " + server_id);
-                        }
-                        // tries the suggestion given as an argument if it has not been already tried and if it has already tried the one 
-                        //the client was attached to at the beggininng
-                        if (this.partitionMap[partition_id].Contains(server_id) && !alreadyTried.Contains(server_id) && !firstTry)
-                        {
-
-                            current_server = serverMap[server_id].service;
-                            current_server_id = server_id;
-                        }
-                        //iterates the list of server for a new server to attach to
-                        else
-                        {
-                            lastServerAttached = current_server_id;
-                            current_server_id = getNextServer(initialCount, alreadyTried, object_id, partition_id);
-
-                            if (current_server_id.Equals(""))
-                            {
-                                current_server_id = lastServerAttached;
-                                return;
-                            }
-
-                            current_server = serverMap[current_server_id].service;
-                        }
-                    }
                 }
                 else
                 {
-                    //if it has not already tried the one previously attached in another request, tries that one
-                    if (firstTry)
-                    {
-                        current_server = serverMap[current_server_id].service;
-                    }
 
-                    else
-                    {
-                        //contacts the suggestion
-                        if (this.partitionMap[partition_id].Contains(server_id) && !alreadyTried.Contains(server_id))
-                        {
-
-                            current_server = serverMap[server_id].service;
-                            current_server_id = server_id;
-                        }
-                        //if there is no suggestion, contact any of the servers
-                        else if (server_id.Equals("-1"))
-                        {
-
-                            lastServerAttached = current_server_id;
-                            current_server_id = getNextServer(initialCount, alreadyTried, object_id, partition_id);
-
-                            if (current_server_id.Equals(""))
-                            {
-                                current_server_id = lastServerAttached;
-                                return;
-                            }
-
-                            current_server = serverMap[current_server_id].service;
-                        }
-                        //if it has already tried the suggestion
-                        else
-                        {
-                            if(! this.partitionMap[partition_id].Contains(server_id))
-                                Console.Error.WriteLine("Error: Unable to locate server " + server_id);
-
-                            lastServerAttached = current_server_id;
-                            current_server_id = getNextServer(initialCount, alreadyTried, object_id, partition_id);
-
-                            if (current_server_id.Equals(""))
-                            {
-                                current_server_id = lastServerAttached;
-                                return;
-                            }
-                         
-                            current_server = serverMap[current_server_id].service;
-                        }
-                    }
-
+                    current_server_id = this.partitionMap[partition_id].First();
+                    current_server = serverMap[this.partitionMap[partition_id].First()].service;
                 }
+            }
+
+            while (!success)
+            {
 
                 Console.WriteLine("Connecting to server " + current_server_id + "...");
 
@@ -206,10 +127,10 @@ namespace GStoreClient
                     Console.Error.WriteLine("Error: Partition " + partition_id + " does not exist in the system");
                     return;
                 }
+
                 try
                 {
-                    firstTry = false;
-
+                    serversLeft.Remove(current_server_id);
                     ReadValueReply reply = current_server.ReadValue(new ReadValueRequest
                     {
                         PartitionId = partition_id,
@@ -219,12 +140,10 @@ namespace GStoreClient
 
                     if (reply.Value.Equals("N/A"))
                     {
-                        Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " from current server");
-                        alreadyTried.Add(current_server_id);
+                        Console.Error.WriteLine("Error: Unable to fetch object " + object_id + " in server " + current_server_id + ". Relocating...");
                     }
                     else
                     {
-                        Console.WriteLine(reply.Value);
                         String value = reply.Value;
                         Tuple<String, String> part_obj_tup = new Tuple<String, String>(partition_id, object_id);
                         if (!timestamp.ContainsKey(part_obj_tup)) {
@@ -248,7 +167,7 @@ namespace GStoreClient
                             }
                         }
                         Console.WriteLine("Read value " + value + " on partition " + partition_id + " on object " + object_id);
-                        success = true;
+                        return;
                     }
 
                 }
@@ -256,34 +175,34 @@ namespace GStoreClient
                 {
 
                     Console.Error.WriteLine("Error: Connection failed to server " + current_server_id + " of partition " + partition_id);
-                    Console.WriteLine(current_server_id);
-                    alreadyTried.Add(current_server_id);
+
 
                 }
-            }
-        }
 
-
-        public string getNextServer( int initialCount, List<string> alreadyTried, string object_id, string partition_id)
-        {
-            int index = 1;
-            string start_server = partitionMap[partition_id].First();
-            while (alreadyTried.Contains(start_server))
-            {
-                if (initialCount == alreadyTried.Count)
+                if (serversLeft.Contains(server_id) && this.partitionMap[partition_id].Contains(server_id))
                 {
-                    Console.Error.WriteLine("Error: Could not retrieve object " + object_id + " from the system. Aborting");
-                    Console.WriteLine("Server outdated, reading from cache!");
-                    string value = responseCache.getCorrectValue(new Tuple<string, string>(partition_id, object_id));
-                    if(value == null) { Console.WriteLine("Value not found in cache"); }
-                    else { Console.WriteLine("Read value " + value + " on cache "); }
-                    return "";
+
+                    current_server_id = server_id;
+                    current_server = this.serverMap[server_id].service;
                 }
-                start_server = partitionMap[partition_id][index];
-                index++;
+                else
+                {
+
+                    if (serversLeft.Count != 0)
+                    {
+                        current_server_id = serversLeft.First();
+                        current_server = this.serverMap[current_server_id].service;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Could not find object " + object_id + " in partition " + partition_id + ". Aborting...");
+                        return;
+                    }
+
+                }
             }
-            return start_server;
         }
+
 
         public bool WriteValue(
                string partition_id, string object_id, string value)
