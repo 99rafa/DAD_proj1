@@ -86,6 +86,12 @@ namespace GStoreClient
             String lastServerAttached = "";
             List<String> serversLeft = this.partitionMap[partition_id];
             bool success = false;
+            
+            if (!partitionMap.ContainsKey(partition_id))
+            {
+                Console.Error.WriteLine("Error: Partition " + partition_id + " does not exist in the system");
+                return;
+            }
 
             if (current_server == null || !this.partitionMap[partition_id].Contains(current_server_id))
             {
