@@ -309,9 +309,9 @@ namespace GStoreClient
                         ObjectId = object_id,
                         Value = value
                     }, deadline: DateTime.UtcNow.AddSeconds(5));
-                    
+                    Console.WriteLine("Reply cvompleted");
                     //If the reply is false the requested server is not the leader
-                    if(reply.Ok == false) {
+                    if (reply.Ok == false) {
                         Console.WriteLine("Received false ok");
                         //remove every server until reply.CurrentLeader
                         removeServers(partition_id, reply.CurrentLeader);
@@ -326,8 +326,9 @@ namespace GStoreClient
                     Console.WriteLine("Retrying write..");
 
                 }
-                catch (RpcException)
+                catch (RpcException e)
                 {
+                    Console.WriteLine(e.StackTrace);
                     Console.Error.WriteLine("Error: Connection failed to server " + server_id + " of partition " + partition_id);
                     current_server_index++;
 
