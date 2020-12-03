@@ -57,6 +57,7 @@ message ListGlobalReply {
 }
 
 message LockRequest {
+	string partition_id = 1;
 }
 
 message LockReply {

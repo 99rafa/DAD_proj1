@@ -27,6 +27,9 @@ namespace gStoreServer
         public Dictionary<String, List<ServerStruct>> partitionServers = new Dictionary<String, List<ServerStruct>>();
         public Dictionary<String, GStoreServerService.GStoreServerServiceClient> openChannels = new Dictionary<String, GStoreServerService.GStoreServerServiceClient>();
 
+        // <partition_name, semaphor> Each value is used as a lock for that partition
+        public Dictionary<string, Semaphore> partitionSemaphor = new Dictionary<string, Semaphore>();
+
         public bool crashed = false;
         public bool frozen = false;
 
@@ -43,6 +46,7 @@ namespace gStoreServer
             if (!partitionServers.ContainsKey(request.PartitionName))
             {
                 partitionServers.Add(request.PartitionName, new List<ServerStruct>());
+                partitionSemaphor.Add(request.PartitionName, new Semaphore(1, 1));
             }
             else
             {
@@ -175,7 +179,7 @@ namespace gStoreServer
 
         private Dictionary<Tuple<String, String>, String> serverObjects = new Dictionary<Tuple<String, String>, String>();
 
-        private Semaphore _semaphore = new Semaphore(1, 1);
+        //private Semaphore _semaphore = new Semaphore(1, 1);
 
         int min_delay, max_delay;
 
@@ -205,10 +209,10 @@ namespace gStoreServer
             String partition_id = request.PartitionId;
             foreach (var pair in serverObjects)
             {
-                _semaphore.WaitOne();
+                puppetService.partitionSemaphor[partition_id].WaitOne();
                 if (pair.Key.Item1 == partition_id)
                     reply.ObjDesc.Add(new ObjectDescription { ObjectId = pair.Key.Item2, PartitionId = pair.Key.Item1 });
-                _semaphore.Release();
+                puppetService.partitionSemaphor[partition_id].Release();
             }
 
             return Task.FromResult(reply);
@@ -222,7 +226,7 @@ namespace gStoreServer
             ListServerObjectsReply reply = new ListServerObjectsReply { };
             foreach (var pair in serverObjects)
             {
-                _semaphore.WaitOne();
+                puppetService.partitionSemaphor[pair.Key.Item1].WaitOne();
                 String obj_id = pair.Key.Item2;
                 String part_id = pair.Key.Item1;
                 String val = pair.Value;
@@ -234,7 +238,7 @@ namespace gStoreServer
                     Value = val,
                     IsMaster = puppetService.serverIsMaster(part_id)
                 });
-                _semaphore.Release();
+                puppetService.partitionSemaphor[pair.Key.Item1].Release();
             }
             return Task.FromResult(reply);
         }
@@ -257,7 +261,10 @@ namespace gStoreServer
             }
 
 
-            _semaphore.WaitOne();
+            puppetService.partitionSemaphor[request.PartitionId].WaitOne();
+            Console.WriteLine("Lock partitinon " + request.PartitionId);
+            Random r = new Random();
+            System.Threading.Thread.Sleep(r.Next(0, 3000));
             try
             {
                 serverObjects[new Tuple<string, string>(request.PartitionId, request.ObjectId)] = request.Value;
@@ -334,7 +341,8 @@ namespace gStoreServer
             }
             finally
             {
-                _semaphore.Release();
+                Console.WriteLine("Unlock partitinon " + request.PartitionId);
+                puppetService.partitionSemaphor[request.PartitionId].Release();
             }
 
             return await Task.FromResult(new WriteValueReply
@@ -358,7 +366,7 @@ namespace gStoreServer
             finally
             {
                 //Release lock
-                _semaphore.Release();
+                puppetService.partitionSemaphor[request.PartitionId].Release();
             }
             Console.WriteLine("Released Lock");
 
@@ -376,7 +384,7 @@ namespace gStoreServer
             System.Threading.Thread.Sleep(RandomDelay());
 
             Console.WriteLine("Locking server for write ");
-            _semaphore.WaitOne();
+            puppetService.partitionSemaphor[request.PartitionId].WaitOne();
             return Task.FromResult(new LockReply
             {
                 Ok = true
@@ -391,7 +399,7 @@ namespace gStoreServer
 
             Console.WriteLine("Received Read request ");
             string value;
-            _semaphore.WaitOne();
+            puppetService.partitionSemaphor[request.PartitionId].WaitOne();
             Tuple<string, string> key = new Tuple<string, string>(request.PartitionId, request.ObjectId);
             if (serverObjects.ContainsKey(key))
             {
@@ -401,7 +409,7 @@ namespace gStoreServer
             {
                 value = "N/A";
             }
-            _semaphore.Release();
+            puppetService.partitionSemaphor[request.PartitionId].Release();
             return Task.FromResult(new ReadValueReply
             {
                 Value = value
