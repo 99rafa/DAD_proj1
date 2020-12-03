@@ -83,6 +83,7 @@ namespace GStoreClient
         public void ReadValue(
            string partition_id, string object_id, string server_id)
         {
+            Console.WriteLine("");
             String lastServerAttached = "";
             List<String> serversLeft = new List<String>(this.partitionMap[partition_id]);
             bool success = false;
@@ -172,6 +173,7 @@ namespace GStoreClient
         public bool WriteValue(
            string partition_id, string object_id, string value)
         {
+            Console.WriteLine("");
             //Assuming the replica master is the first element of the list  
             string server_id = partitionMap[partition_id].First();
 
@@ -201,6 +203,7 @@ namespace GStoreClient
 
         public void ListServer(String server_id)
         {
+            Console.WriteLine("");
             if (!serverMap.ContainsKey(server_id))
             {
                 Console.Error.WriteLine("Error: Unable to locate server " + server_id);

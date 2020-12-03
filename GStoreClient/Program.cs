@@ -35,6 +35,7 @@ namespace GStoreClient
         [STAThread]
         static void Main(string[] args)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             GStoreClient client;
             Console.WriteLine("Username: " + args[0] + "\t hostname: " + args[1] + "\t script_path: " + args[2]);
 
@@ -66,6 +67,11 @@ namespace GStoreClient
             client = new GStoreClient(username, hostname, partitions);
 
             client.readScriptFile(ops_file);
+
+            watch.Stop();
+            TimeSpan ts = watch.Elapsed;
+            Console.WriteLine("Elapsed Time is {0:00}.{1}",
+                       ts.Seconds, ts.Milliseconds);
 
             while (true) ;
         }
