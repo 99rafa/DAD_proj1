@@ -83,7 +83,6 @@ namespace GStoreClient
         public void ReadValue(
            string partition_id, string object_id, string server_id)
         {
-            Console.WriteLine("");
             String lastServerAttached = "";
             List<String> serversLeft = new List<String>(this.partitionMap[partition_id]);
             bool success = false;
@@ -173,7 +172,6 @@ namespace GStoreClient
         public bool WriteValue(
            string partition_id, string object_id, string value)
         {
-            Console.WriteLine("");
             //Assuming the replica master is the first element of the list  
             string server_id = partitionMap[partition_id].First();
 
@@ -203,7 +201,6 @@ namespace GStoreClient
 
         public void ListServer(String server_id)
         {
-            Console.WriteLine("");
             if (!serverMap.ContainsKey(server_id))
             {
                 Console.Error.WriteLine("Error: Unable to locate server " + server_id);
@@ -377,32 +374,32 @@ namespace GStoreClient
                     partition_id = args[1];
                     object_id = args[2];
                     server_id = args[3];
-                    Console.WriteLine("Read request received");
+                    Console.WriteLine("\nRead request received");
                     ReadValue(partition_id, object_id, server_id);
                     break;
                 case "write":
                     partition_id = args[1];
                     object_id = args[2];
                     String value = op.Split('"')[1];
-                    Console.WriteLine("Write request received");
+                    Console.WriteLine("\nWrite request received");
                     bool done = WriteValue(partition_id, object_id, value);
                     if (done) Console.WriteLine("Value written!");
                     else Console.Error.WriteLine("Error: Could not write given value");
                     break;
                 case "listServer":
                     server_id = args[1];
-                    Console.WriteLine("List Server request received");
+                    Console.WriteLine("\nList Server request received");
                     Console.WriteLine("Reading all objects from server " + server_id);
                     ListServer(server_id);
                     break;
                 case "listGlobal":
-                    Console.WriteLine("List Global request received");
+                    Console.WriteLine("\nList Global request received");
                     Console.WriteLine("Reading all objects from the system");
                     ListGlobal();
                     break;
                 case "wait":
                     String ms = args[1];
-                    Console.WriteLine("Wait request received");
+                    Console.WriteLine("\nWait request received");
                     Console.WriteLine("Delaying execution for " + ms + " milliseconds");
                     System.Threading.Thread.Sleep(int.Parse(ms));
                     Console.WriteLine("Program resumed");

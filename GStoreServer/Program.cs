@@ -262,9 +262,6 @@ namespace gStoreServer
 
 
             puppetService.partitionSemaphor[request.PartitionId].WaitOne();
-            Console.WriteLine("Lock partitinon " + request.PartitionId);
-            Random r = new Random();
-            System.Threading.Thread.Sleep(r.Next(0, 3000));
             try
             {
                 serverObjects[new Tuple<string, string>(request.PartitionId, request.ObjectId)] = request.Value;
@@ -277,7 +274,7 @@ namespace gStoreServer
                     if (server.url != puppetService.url)
                     {
                         Console.WriteLine("\t\tSending lock request to " + server.url);
-                        AsyncUnaryCall<LockReply> reply = server.service.LockAsync(new LockRequest { });
+                        AsyncUnaryCall<LockReply> reply = server.service.LockAsync(new LockRequest { PartitionId = request.PartitionId });
                         pendingLocks.Add(reply);
                         
                     }
@@ -341,7 +338,6 @@ namespace gStoreServer
             }
             finally
             {
-                Console.WriteLine("Unlock partitinon " + request.PartitionId);
                 puppetService.partitionSemaphor[request.PartitionId].Release();
             }
 
@@ -356,7 +352,6 @@ namespace gStoreServer
 
             while (puppetService.frozen) ;
             System.Threading.Thread.Sleep(RandomDelay());
-
             Console.WriteLine("Received shared write :   objId: " + request.ObjectId + "    value: " + request.Value);
             try
             {
