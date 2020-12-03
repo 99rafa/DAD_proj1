@@ -89,7 +89,7 @@ namespace GStoreClient
    string partition_id, string object_id, string server_id)
         {
             int initialCount = this.partitionMap[partition_id].Count;
-            List<String> serversLeft = this.partitionMap[partition_id];
+            List<String> serversLeft = new List<String>(this.partitionMap[partition_id]);
             bool success = false;
 
 
@@ -135,7 +135,7 @@ namespace GStoreClient
                     {
                         PartitionId = partition_id,
                         ObjectId = object_id,
-                    }, deadline: DateTime.UtcNow.AddSeconds(5));
+                    }, deadline: DateTime.UtcNow.AddSeconds(200));
 
 
                     if (reply.Value.Equals("N/A"))
@@ -209,7 +209,7 @@ namespace GStoreClient
         {
             bool success = false;
             int current_server_index = 0;
-            while (!success && partitionMap[partition_id].Count != 0 && partitionMap[partition_id].Count > current_server_index)
+            while (!success && partitionMap[partition_id].Count() != 0 && partitionMap[partition_id].Count() > current_server_index)
             {
                 //Assuming the replica master is the first element of the list  
                 string server_id = partitionMap[partition_id][current_server_index];
@@ -227,11 +227,10 @@ namespace GStoreClient
                         PartitionId = partition_id,
                         ObjectId = object_id,
                         Value = value
-                    }, deadline: DateTime.UtcNow.AddSeconds(5));
-                    Console.WriteLine("Reply cvompleted");
+                    });
                     //If the reply is false the requested server is not the leader
                     if (reply.Ok == false) {
-                        Console.WriteLine("Received false ok");
+                        Console.WriteLine("Write failed on server " + server_id + " because he is not the leader");
                         //remove every server until reply.CurrentLeader
                         removeServers(partition_id, reply.CurrentLeader);
                         current_server_index = 0;
@@ -247,7 +246,6 @@ namespace GStoreClient
                 }
                 catch (RpcException e)
                 {
-                    Console.WriteLine(e.StackTrace);
                     Console.Error.WriteLine("Error: Connection failed to server " + server_id + " of partition " + partition_id);
                     current_server_index++;
 
@@ -268,7 +266,7 @@ namespace GStoreClient
 
             try
             {
-                ListServerObjectsReply reply = server.ListServerObjects(new ListServerObjectsRequest { });
+                ListServerObjectsReply reply = server.ListServerObjects(new ListServerObjectsRequest { }, deadline: DateTime.UtcNow.AddSeconds(5));
 
                 Console.WriteLine("Server " + server_id + " stores the following objects:");
 
@@ -292,15 +290,15 @@ namespace GStoreClient
         public void ListGlobal()
         {
             List<String> masters = new List<String>();
-            foreach (var pair in partitionMap)
+            foreach (var pair in serverMap)
             {
-                foreach (String server_id in pair.Value)
-                {
-                    ListServer(server_id);
-                    Console.WriteLine();
+                Console.WriteLine("Listglobal server " + pair.Key);
+                ListServer(pair.Key);
+                Console.WriteLine();
 
-                }
+                
             }
+            Console.WriteLine("List Global completed");
         }
 
         public void readScriptFile(String file)
@@ -475,8 +473,8 @@ namespace GStoreClient
                 case "wait":
                     String ms = args[1];
                     Console.WriteLine("Wait request received");
-                    Console.WriteLine("Delaying execution for " + ms + " milliseconds");
-                    System.Threading.Tasks.Task.Delay(int.Parse(ms)).Wait();
+                    Console.WriteLine("Delaying execution for " + ms + " milliseconds"); 
+                    System.Threading.Thread.Sleep(int.Parse(ms));
                     Console.WriteLine("Program resumed");
                     break;
                 case "begin-repeat":
