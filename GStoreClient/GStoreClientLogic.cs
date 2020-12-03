@@ -135,7 +135,7 @@ namespace GStoreClient
                     {
                         PartitionId = partition_id,
                         ObjectId = object_id,
-                    }, deadline: DateTime.UtcNow.AddSeconds(200));
+                    }, deadline: DateTime.UtcNow.AddSeconds(5));
 
 
                     if (reply.Value.Equals("N/A"))
@@ -227,7 +227,7 @@ namespace GStoreClient
                         PartitionId = partition_id,
                         ObjectId = object_id,
                         Value = value
-                    });
+                    }, deadline: DateTime.UtcNow.AddSeconds(5));
                     //If the reply is false the requested server is not the leader
                     if (reply.Ok == false) {
                         Console.WriteLine("Write failed on server " + server_id + " because he is not the leader");

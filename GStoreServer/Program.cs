@@ -324,7 +324,6 @@ namespace gStoreServer
             finally {
                 Monitor.Exit(this.puppetService.partitionServers[request.PartitionId]);
             }
-
             //return this message with the real leader server if this server is not the master
             if (current_leader_url != null) {
                 return await Task.FromResult(new WriteValueReply {
