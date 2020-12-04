@@ -247,7 +247,6 @@ namespace PuppetMaster
                         server_id = args[i + 3];
                         AddServerToPartition(part_id, server_id);
 
-                        //AsyncUnaryCall<PartitionReply> reply = servers[server_id].service.PartitionAsync... Melhora o tempo a mil
                         PartitionReply reply = servers[server_id].service.Partition(new PartitionRequest
                         {
                             PartitionId = part_id,

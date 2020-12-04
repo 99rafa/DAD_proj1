@@ -48,7 +48,6 @@ namespace GStoreClient
             hostname = host;
 
             //partitions come in command line format: -p partition_id partition_master_id partition_master_url other_servers_id other_servers_url -p 
-            //maybe it should not be here as it is command line logic
 
             String[] partitions = args.Split("-p ", StringSplitOptions.RemoveEmptyEntries);
 
