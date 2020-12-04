@@ -234,14 +234,10 @@ namespace GStoreClient
         public void ListGlobal()
         {
             List<String> masters = new List<String>();
-            foreach (var pair in partitionMap)
+            foreach (var pair in serverMap)
             {
-                foreach (String server_id in pair.Value)
-                {
-                    ListServer(server_id);
-                    Console.WriteLine();
-
-                }
+                ListServer(pair.Key);
+                Console.WriteLine();
             }
         }
 

@@ -179,8 +179,6 @@ namespace gStoreServer
 
         private Dictionary<Tuple<String, String>, String> serverObjects = new Dictionary<Tuple<String, String>, String>();
 
-        //private Semaphore _semaphore = new Semaphore(1, 1);
-
         int min_delay, max_delay;
 
         public ServerService(PuppetServerService p, int min, int max)
@@ -290,7 +288,7 @@ namespace gStoreServer
                     Console.WriteLine("\t\tConnection failed to server, removing server");
                     for(int i=0; i<pendingLocks.Count(); i++) {
                         if(pendingLocks[i].ResponseAsync.Exception != null) {
-                            Console.WriteLine("\t\tRemoving server: " + partitionServers[i+1].url); //i+1 because the master server is also in the partitionServers list
+                            Console.WriteLine("\t\tRemoving server: " + partitionServers[i+1].url); 
                             puppetService.removeServer(partitionServers[i + 1].url);
                         }
                     }
@@ -329,7 +327,7 @@ namespace gStoreServer
                     Console.WriteLine("\t\tConnection failed to server, removing server");
                     for (int i = 0; i < pendingLocks.Count(); i++) {
                         if (pendingLocks[i].ResponseAsync.Exception != null) {
-                            Console.WriteLine("\t\tRemoving server: " + partitionServers[i + 1].url); //i+1 because the master server is also in the partitionServers list
+                            Console.WriteLine("\t\tRemoving server: " + partitionServers[i + 1].url);
                             puppetService.removeServer(partitionServers[i + 1].url);
                         }
                     }
@@ -395,6 +393,7 @@ namespace gStoreServer
             Console.WriteLine("Received Read request ");
             string value;
             puppetService.partitionSemaphor[request.PartitionId].WaitOne();
+            Console.WriteLine("Lock");
             Tuple<string, string> key = new Tuple<string, string>(request.PartitionId, request.ObjectId);
             if (serverObjects.ContainsKey(key))
             {
@@ -404,6 +403,7 @@ namespace gStoreServer
             {
                 value = "N/A";
             }
+            Console.WriteLine("Unlock");
             puppetService.partitionSemaphor[request.PartitionId].Release();
             return Task.FromResult(new ReadValueReply
             {
@@ -419,8 +419,6 @@ namespace gStoreServer
 
         public static void Main(string[] args)
         {
-            //const int port = 1001;
-            //const string hostname = "localhost";
             string startupMessage;
             ServerPort serverPort;
 

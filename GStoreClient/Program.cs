@@ -70,8 +70,8 @@ namespace GStoreClient
 
             watch.Stop();
             TimeSpan ts = watch.Elapsed;
-            Console.WriteLine("Elapsed Time is {0:00}.{1}",
-                       ts.Seconds, ts.Milliseconds);
+            Console.WriteLine("Elapsed Time is {0:00}.{1:00}.{2}",
+                       ts.Minutes, ts.Seconds, ts.Milliseconds);
 
             while (true) ;
         }
